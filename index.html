@@ -14,8 +14,8 @@
 html, body { height: 100%; }
 body {
   font-family: 'Noto Sans KR', -apple-system, sans-serif;
-  background: #050914;
-  color: #e2e8f0;
+  background: #f7f3e9;
+  color: #1a2b3d;
   line-height: 1.6;
   overflow: hidden;
 }
@@ -25,37 +25,37 @@ body {
 .mono { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
 .display { font-family: 'Inter', 'Noto Sans KR', sans-serif; }
 
-.text-cyan { color: #22d3ee; }
-.text-hcyan { color: #00B4D8; }
-.text-hblue { color: #4a90d9; }
-.text-amber { color: #fbbf24; }
-.text-red { color: #f87171; }
-.text-emerald { color: #34d399; }
-.text-muted { color: #94a3b8; }
-.text-mute2 { color: #64748b; }
+.text-cyan { color: #1e3a5f; }
+.text-hcyan { color: #1e3a5f; }
+.text-hblue { color: #2563eb; }
+.text-amber { color: #b45309; }
+.text-red { color: #b91c1c; }
+.text-emerald { color: #059669; }
+.text-muted { color: #4a5670; }
+.text-mute2 { color: #7d8590; }
 
 .scroll-y { overflow-y: auto; }
 .scroll-y::-webkit-scrollbar { width: 8px; }
 .scroll-y::-webkit-scrollbar-track { background: transparent; }
-.scroll-y::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-.scroll-y::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+.scroll-y::-webkit-scrollbar-thumb { background: rgba(30,43,61,0.15); border-radius: 4px; }
+.scroll-y::-webkit-scrollbar-thumb:hover { background: rgba(30,43,61,0.3); }
 
 /* ============= LAYOUT ============= */
 .app { display: flex; height: 100vh; }
 .sidebar {
   width: 260px;
   flex-shrink: 0;
-  background: #0a1128;
-  border-right: 1px solid rgba(255,255,255,0.08);
+  background: #efe7d5;
+  border-right: 1px solid rgba(30,43,61,0.1);
   display: flex;
   flex-direction: column;
 }
-.main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.main { flex: 1; overflow: hidden; display: flex; flex-direction: column; background: #f7f3e9; }
 
 /* ============= SIDEBAR ============= */
 .brand-block {
   padding: 20px 20px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(30,43,61,0.1);
 }
 .brand-badge {
   display: inline-flex;
@@ -65,15 +65,15 @@ body {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.2em;
-  color: #22d3ee;
+  color: #c65f3f;
   margin-bottom: 8px;
 }
 .brand-badge::before {
   content: '';
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: #22d3ee;
-  box-shadow: 0 0 8px #22d3ee;
+  background: #c65f3f;
+  box-shadow: 0 0 6px rgba(198,95,63,0.5);
   animation: pulse 2s infinite;
 }
 @keyframes pulse {
@@ -84,12 +84,12 @@ body {
   font-family: 'Inter', sans-serif;
   font-weight: 800;
   font-size: 22px;
-  color: white;
+  color: #1a2b3d;
   letter-spacing: -0.02em;
   line-height: 1;
 }
-.brand-name .dot { color: #22d3ee; }
-.brand-sub { font-size: 11px; color: #64748b; margin-top: 4px; }
+.brand-name .dot { color: #c65f3f; }
+.brand-sub { font-size: 11px; color: #6b7280; margin-top: 4px; }
 
 .nav-section { padding: 12px 0; }
 .nav-label {
@@ -97,7 +97,7 @@ body {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: #475569;
+  color: #8b8578;
   padding: 8px 20px 4px;
   text-transform: uppercase;
 }
@@ -108,7 +108,7 @@ body {
   padding: 8px 20px;
   font-size: 13px;
   font-weight: 500;
-  color: #94a3b8;
+  color: #4a5670;
   cursor: pointer;
   border-left: 2px solid transparent;
   background: transparent;
@@ -120,11 +120,12 @@ body {
   transition: background 0.15s;
   font-family: inherit;
 }
-.nav-item:hover { background: rgba(255,255,255,0.03); color: white; }
+.nav-item:hover { background: rgba(30,43,61,0.04); color: #1a2b3d; }
 .nav-item.active {
-  color: #22d3ee;
-  border-left-color: #22d3ee;
-  background: linear-gradient(90deg, rgba(34,211,238,0.12), transparent);
+  color: #1e3a5f;
+  border-left-color: #1e3a5f;
+  background: rgba(30,58,95,0.08);
+  font-weight: 600;
 }
 .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
 .nav-item .label { flex: 1; }
@@ -133,8 +134,8 @@ body {
   font-size: 10px;
   font-weight: 700;
   padding: 2px 6px;
-  background: rgba(34,211,238,0.15);
-  color: #22d3ee;
+  background: rgba(198,95,63,0.15);
+  color: #c65f3f;
   border-radius: 3px;
 }
 
@@ -144,7 +145,7 @@ body {
   gap: 8px;
   padding: 5px 20px 5px 40px;
   font-size: 12px;
-  color: #94a3b8;
+  color: #4a5670;
   cursor: pointer;
   background: transparent;
   border: none;
@@ -152,46 +153,46 @@ body {
   text-align: left;
   font-family: inherit;
 }
-.program-item:hover { background: rgba(255,255,255,0.03); color: white; }
+.program-item:hover { background: rgba(30,43,61,0.04); color: #1a2b3d; }
 .program-item .dot {
   width: 4px; height: 4px;
   border-radius: 50%;
-  background: rgba(148, 163, 184, 0.5);
+  background: rgba(30,43,61,0.3);
   flex-shrink: 0;
 }
 .program-item .count {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 10px;
-  color: #64748b;
+  color: #7d8590;
 }
 
 .sidebar-footer {
   margin-top: auto;
-  padding: 12px 20px;
-  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 14px 20px;
+  border-top: 1px solid rgba(30,43,61,0.1);
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  color: #64748b;
-  line-height: 1.6;
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.7;
 }
 .sidebar-footer .settings-btn {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
-  margin: -6px 0 6px;
+  margin: -2px 0 10px;
   border-radius: 3px;
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.08);
-  color: #94a3b8;
+  border: 1px solid rgba(30,43,61,0.1);
+  color: #4a5670;
   cursor: pointer;
   font-size: 10px;
   font-family: inherit;
   width: 100%;
   text-align: left;
 }
-.sidebar-footer .settings-btn:hover { background: rgba(255,255,255,0.05); color: white; }
-.sidebar-footer .settings-btn.has-key { color: #34d399; border-color: rgba(52,211,153,0.3); }
+.sidebar-footer .settings-btn:hover { background: rgba(30,43,61,0.04); color: #1a2b3d; }
+.sidebar-footer .settings-btn.has-key { color: #059669; border-color: rgba(5,150,105,0.3); background: rgba(5,150,105,0.06); }
 
 /* ============= BUTTONS ============= */
 .btn {
@@ -209,29 +210,40 @@ body {
   letter-spacing: 0.02em;
 }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-primary { background: #22d3ee; color: #050914; }
-.btn-primary:hover:not(:disabled) { background: #67e8f9; }
+.btn-primary { background: #1e3a5f; color: #ffffff; }
+.btn-primary:hover:not(:disabled) { background: #2a4d7a; }
 .btn-secondary {
   background: transparent;
-  color: #cbd5e1;
-  border-color: rgba(255,255,255,0.14);
+  color: #1a2b3d;
+  border-color: rgba(30,43,61,0.2);
 }
-.btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.25); }
+.btn-secondary:hover { background: rgba(30,43,61,0.05); border-color: rgba(30,43,61,0.35); }
 .btn-danger {
-  background: rgba(239,68,68,0.1);
-  color: #f87171;
-  border-color: rgba(239,68,68,0.3);
+  background: rgba(185,28,28,0.08);
+  color: #b91c1c;
+  border-color: rgba(185,28,28,0.25);
 }
-.btn-danger:hover { background: rgba(239,68,68,0.2); }
+.btn-danger:hover { background: rgba(185,28,28,0.15); }
+.btn-accent {
+  background: #c65f3f;
+  color: #ffffff;
+}
+.btn-accent:hover:not(:disabled) { background: #b04d30; }
 .btn svg { width: 14px; height: 14px; }
 .btn-lg { padding: 10px 20px; font-size: 14px; }
 
 /* ============= CARDS ============= */
-.card { background: #141e40; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 16px; }
+.card {
+  background: #ffffff;
+  border: 1px solid rgba(30,43,61,0.08);
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(30,43,61,0.04);
+}
 .paste-area {
-  background: #0d1936;
-  border: 1px solid rgba(255,255,255,0.14);
-  color: #e2e8f0;
+  background: #ffffff;
+  border: 1px solid rgba(30,43,61,0.15);
+  color: #1a2b3d;
   transition: all 0.15s;
   width: 100%;
   padding: 20px 24px;
@@ -241,30 +253,31 @@ body {
   border-radius: 8px;
   resize: vertical;
   outline: none;
+  box-shadow: 0 1px 3px rgba(30,43,61,0.04);
 }
 .paste-area:focus {
-  border-color: #22d3ee;
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+  border-color: #1e3a5f;
+  box-shadow: 0 0 0 3px rgba(30,58,95,0.12);
 }
 
 /* ============= HIGHLIGHTS ============= */
 .hl-error {
-  background: rgba(239, 68, 68, 0.2);
-  border-bottom: 2px wavy #f87171;
+  background: rgba(185,28,28,0.12);
+  border-bottom: 2px wavy #b91c1c;
   padding: 1px 3px;
   border-radius: 2px;
   cursor: help;
 }
 .hl-warn {
-  background: rgba(251, 191, 36, 0.2);
-  border-bottom: 2px wavy #fbbf24;
+  background: rgba(180,83,9,0.12);
+  border-bottom: 2px wavy #b45309;
   padding: 1px 3px;
   border-radius: 2px;
   cursor: help;
 }
 .hl-suggest {
-  background: rgba(59, 130, 246, 0.15);
-  border-bottom: 2px dotted #3b82f6;
+  background: rgba(37,99,235,0.1);
+  border-bottom: 2px dotted #2563eb;
   padding: 1px 3px;
   border-radius: 2px;
   cursor: help;
@@ -282,25 +295,26 @@ body {
   font-family: 'IBM Plex Mono', monospace;
   border: 1px solid;
 }
-.chip.cyan { background: rgba(0,180,216,0.15); color: #22d3ee; border-color: rgba(0,180,216,0.3); }
-.chip.emerald { background: rgba(52,211,153,0.15); color: #34d399; border-color: rgba(52,211,153,0.3); }
-.chip.amber { background: rgba(251,191,36,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
-.chip.purple { background: rgba(147,51,234,0.15); color: #c084fc; border-color: rgba(147,51,234,0.3); }
-.chip.blue { background: rgba(0,75,141,0.25); color: #60a5fa; border-color: rgba(0,75,141,0.5); }
-.chip.slate { background: rgba(148,163,184,0.1); color: #cbd5e1; border-color: rgba(148,163,184,0.2); }
+.chip.cyan { background: rgba(30,58,95,0.08); color: #1e3a5f; border-color: rgba(30,58,95,0.2); }
+.chip.emerald { background: rgba(5,150,105,0.08); color: #059669; border-color: rgba(5,150,105,0.25); }
+.chip.amber { background: rgba(180,83,9,0.08); color: #b45309; border-color: rgba(180,83,9,0.25); }
+.chip.purple { background: rgba(124,58,237,0.08); color: #7c3aed; border-color: rgba(124,58,237,0.25); }
+.chip.blue { background: rgba(37,99,235,0.08); color: #2563eb; border-color: rgba(37,99,235,0.25); }
+.chip.slate { background: rgba(30,43,61,0.06); color: #4a5670; border-color: rgba(30,43,61,0.15); }
+.chip.coral { background: rgba(198,95,63,0.1); color: #c65f3f; border-color: rgba(198,95,63,0.3); }
 
 /* ============= FINDING CARDS ============= */
 .finding {
   padding: 12px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: #ffffff;
+  border: 1px solid rgba(30,43,61,0.08);
   border-left: 3px solid;
   border-radius: 4px;
   margin-bottom: 8px;
 }
-.finding.error { border-left-color: #f87171; }
-.finding.warn { border-left-color: #fbbf24; }
-.finding.suggest { border-left-color: #3b82f6; }
+.finding.error { border-left-color: #b91c1c; }
+.finding.warn { border-left-color: #b45309; }
+.finding.suggest { border-left-color: #2563eb; }
 .finding-type {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 9px;
@@ -308,24 +322,24 @@ body {
   letter-spacing: 0.1em;
   margin-bottom: 6px;
 }
-.finding.error .finding-type { color: #f87171; }
-.finding.warn .finding-type { color: #fbbf24; }
-.finding.suggest .finding-type { color: #3b82f6; }
+.finding.error .finding-type { color: #b91c1c; }
+.finding.warn .finding-type { color: #b45309; }
+.finding.suggest .finding-type { color: #2563eb; }
 .finding-text {
   font-size: 12px;
-  color: white;
+  color: #1a2b3d;
   font-weight: 500;
   margin-bottom: 4px;
 }
-.finding-text .strike { color: #f87171; text-decoration: line-through; font-family: 'Noto Serif KR', serif; }
-.finding-text .fix { color: #34d399; font-weight: 700; font-family: 'Noto Serif KR', serif; }
-.finding-reason { color: #94a3b8; font-size: 11px; }
+.finding-text .strike { color: #b91c1c; text-decoration: line-through; font-family: 'Noto Serif KR', serif; }
+.finding-text .fix { color: #059669; font-weight: 700; font-family: 'Noto Serif KR', serif; }
+.finding-reason { color: #6b7280; font-size: 11px; }
 
 /* ============= HEADER BARS ============= */
 .top-bar {
   padding: 14px 32px;
-  background: #0a1128;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: #f0eadc;
+  border-bottom: 1px solid rgba(30,43,61,0.1);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -335,21 +349,21 @@ body {
 .step-label {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
-  color: #64748b;
+  color: #7d8590;
   letter-spacing: 0.15em;
 }
 
 /* ============= CHECK VIEW SPLIT ============= */
 .check-split {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 400px;
   flex: 1;
   overflow: hidden;
 }
 .paper-view {
   padding: 32px;
-  background: #faf7ef;
-  color: #1a1a2e;
+  background: #ffffff;
+  color: #1a2b3d;
   overflow-y: auto;
 }
 .paper-content {
@@ -360,35 +374,35 @@ body {
   line-height: 1.85;
 }
 .paper-content .cg-line {
-  color: #64748b;
+  color: #7d8590;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   padding: 2px 0;
 }
-.paper-content .cg-line .cg-marker { color: #00B4D8; font-weight: 700; }
+.paper-content .cg-line .cg-marker { color: #1e3a5f; font-weight: 700; }
 .paper-content .speaker-line { margin-top: 10px; padding: 2px 0; }
 .paper-content .speaker-line .speaker {
   font-weight: 700;
-  color: #00B4D8;
+  color: #1e3a5f;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 13px;
 }
 .paper-content .header-line {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
-  color: #6b7280;
+  color: #7d8590;
   padding: 2px 0;
 }
 .paper-content .career-line {
   font-size: 12px;
-  color: #6b7280;
+  color: #7d8590;
   padding-left: 16px;
 }
 .paper-content p, .paper-content div { margin: 0; }
 
 .findings-panel {
-  background: #0a1128;
-  border-left: 1px solid rgba(255,255,255,0.08);
+  background: #f0eadc;
+  border-left: 1px solid rgba(30,43,61,0.1);
   padding: 20px;
   overflow-y: auto;
 }
@@ -402,47 +416,48 @@ body {
   padding: 10px;
   border-left: 2px solid;
   border-radius: 3px;
+  background: #ffffff;
 }
-.stat.error { background: rgba(239,68,68,0.05); border-color: #f87171; }
-.stat.warn { background: rgba(251,191,36,0.05); border-color: #fbbf24; }
-.stat.suggest { background: rgba(59,130,246,0.05); border-color: #3b82f6; }
+.stat.error { border-color: #b91c1c; }
+.stat.warn { border-color: #b45309; }
+.stat.suggest { border-color: #2563eb; }
 .stat .n {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 20px;
   font-weight: 700;
-  color: white;
+  color: #1a2b3d;
 }
 .stat .lbl { font-size: 10px; letter-spacing: 0.05em; margin-top: 2px; }
-.stat.error .lbl { color: #f87171; }
-.stat.warn .lbl { color: #fbbf24; }
-.stat.suggest .lbl { color: #60a5fa; }
+.stat.error .lbl { color: #b91c1c; }
+.stat.warn .lbl { color: #b45309; }
+.stat.suggest .lbl { color: #2563eb; }
 
 /* ============= FORM FIELDS ============= */
 .field-row {
   display: grid;
-  grid-template-columns: 80px 1fr;
+  grid-template-columns: 100px 1fr;
   gap: 12px;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(30,43,61,0.06);
 }
 .field-row .field-label {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
-  color: #64748b;
+  color: #6b7280;
 }
 .field-input, select.field-input {
-  background: #0d1936;
-  color: white;
-  border: 1px solid rgba(255,255,255,0.14);
+  background: #ffffff;
+  color: #1a2b3d;
+  border: 1px solid rgba(30,43,61,0.15);
   padding: 6px 10px;
   font-size: 12px;
   border-radius: 3px;
   width: 100%;
   font-family: 'Noto Sans KR', sans-serif;
 }
-.field-input:focus { outline: none; border-color: #22d3ee; }
+.field-input:focus { outline: none; border-color: #1e3a5f; box-shadow: 0 0 0 2px rgba(30,58,95,0.1); }
 
 /* ============= SECTION TITLE ============= */
 .section-title {
@@ -451,13 +466,13 @@ body {
   gap: 6px;
   margin-bottom: 8px;
 }
-.section-title svg { width: 12px; height: 12px; color: #22d3ee; }
+.section-title svg { width: 12px; height: 12px; color: #1e3a5f; }
 .section-title .lbl {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: #22d3ee;
+  color: #1e3a5f;
   text-transform: uppercase;
 }
 
@@ -474,16 +489,17 @@ body {
 }
 .cg-stat-cell {
   padding: 8px;
-  background: rgba(255,255,255,0.02);
+  background: #f7f3e9;
   border-radius: 3px;
   text-align: center;
+  border: 1px solid rgba(30,43,61,0.06);
 }
 .cg-stat-cell .n {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 20px;
   font-weight: 700;
 }
-.cg-stat-cell .lbl { color: #94a3b8; font-size: 10px; margin-top: 2px; }
+.cg-stat-cell .lbl { color: #6b7280; font-size: 10px; margin-top: 2px; }
 
 /* ============= ARCHIVE ============= */
 .archive-grid {
@@ -493,8 +509,8 @@ body {
 }
 .archive-card {
   padding: 16px;
-  background: #141e40;
-  border: 1px solid rgba(255,255,255,0.08);
+  background: #ffffff;
+  border: 1px solid rgba(30,43,61,0.08);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s;
@@ -502,10 +518,12 @@ body {
   font-family: inherit;
   text-align: left;
   font-size: inherit;
+  box-shadow: 0 1px 3px rgba(30,43,61,0.04);
 }
 .archive-card:hover {
-  border-color: #22d3ee;
+  border-color: #1e3a5f;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(30,43,61,0.08);
 }
 .archive-card .card-top {
   display: flex;
@@ -516,18 +534,18 @@ body {
 .archive-card .card-date {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 10px;
-  color: #64748b;
+  color: #7d8590;
 }
 .archive-card .card-corner {
   font-family: 'Noto Serif KR', serif;
   font-size: 15px;
   font-weight: 700;
-  color: white;
+  color: #1a2b3d;
   margin-bottom: 4px;
   line-height: 1.3;
 }
 .archive-card .card-guest {
-  color: #94a3b8;
+  color: #4a5670;
   font-size: 12px;
   margin-bottom: 8px;
 }
@@ -535,61 +553,19 @@ body {
   display: flex;
   gap: 12px;
   font-size: 10px;
-  color: #64748b;
+  color: #7d8590;
   font-family: 'IBM Plex Mono', monospace;
   padding-top: 8px;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: 1px solid rgba(30,43,61,0.06);
 }
-
-/* ============= MODAL ============= */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(4px);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.modal {
-  background: #0a1128;
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 8px;
-  padding: 32px;
-  max-width: 520px;
-  width: 90%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-}
-.modal h2 {
-  font-family: 'Noto Serif KR', serif;
-  font-size: 20px;
-  font-weight: 800;
-  color: white;
-  margin-bottom: 8px;
-}
-.modal p { color: #94a3b8; font-size: 13px; margin-bottom: 16px; line-height: 1.6; }
-.modal input {
-  background: #0d1936;
-  color: white;
-  border: 1px solid rgba(255,255,255,0.14);
-  padding: 10px 14px;
-  font-size: 13px;
-  border-radius: 4px;
-  width: 100%;
-  font-family: 'IBM Plex Mono', monospace;
-  margin-bottom: 12px;
-}
-.modal input:focus { outline: none; border-color: #22d3ee; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 
 /* ============= LOADING ============= */
 .loading-spin {
   display: inline-block;
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(34,211,238,0.2);
-  border-top-color: #22d3ee;
+  border: 2px solid rgba(30,58,95,0.2);
+  border-top-color: #1e3a5f;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -597,7 +573,6 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
@@ -613,64 +588,16 @@ body {
   width: 48px;
   height: 48px;
   margin: 0 auto 16px;
-  opacity: 0.3;
-  color: #64748b;
+  opacity: 0.4;
+  color: #7d8590;
 }
 .empty-state .title {
   font-family: 'Noto Serif KR', serif;
   font-size: 18px;
-  color: #94a3b8;
+  color: #4a5670;
   margin-bottom: 8px;
 }
-.empty-state .desc { color: #64748b; font-size: 13px; }
-
-/* ============= FILE UPLOAD ============= */
-.upload-dropzone {
-  border: 2px dashed rgba(0,180,216,0.4);
-  border-radius: 8px;
-  padding: 32px;
-  text-align: center;
-  background: rgba(0,180,216,0.03);
-  margin-bottom: 20px;
-  transition: all 0.15s;
-  cursor: pointer;
-}
-.upload-dropzone:hover, .upload-dropzone.dragover {
-  border-color: #22d3ee;
-  background: rgba(34,211,238,0.08);
-}
-.upload-dropzone-icon {
-  width: 40px;
-  height: 40px;
-  margin: 0 auto 8px;
-  color: #22d3ee;
-}
-.upload-dropzone-title {
-  font-size: 14px;
-  color: white;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.upload-dropzone-sub {
-  font-size: 11px;
-  color: #64748b;
-  font-family: 'IBM Plex Mono', monospace;
-}
-.upload-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 0;
-  color: #64748b;
-  font-size: 11px;
-  font-family: 'IBM Plex Mono', monospace;
-}
-.upload-divider::before, .upload-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: rgba(255,255,255,0.08);
-}
+.empty-state .desc { color: #7d8590; font-size: 13px; }
 
 /* ============= NOTIFICATION ============= */
 .notify {
@@ -678,17 +605,320 @@ body {
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: #141e40;
-  border: 1px solid rgba(52,211,153,0.4);
-  color: #34d399;
+  background: #ffffff;
+  border: 1px solid rgba(5,150,105,0.4);
+  color: #059669;
   padding: 10px 20px;
   border-radius: 6px;
   font-size: 13px;
   z-index: 200;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 24px rgba(30,43,61,0.12);
   animation: fadeIn 0.25s ease;
 }
-.notify.err { border-color: rgba(239,68,68,0.4); color: #f87171; }
+.notify.err { border-color: rgba(185,28,28,0.4); color: #b91c1c; }
+
+/* ============= FILE UPLOAD ============= */
+.upload-dropzone {
+  border: 2px dashed rgba(30,58,95,0.3);
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+  background: rgba(30,58,95,0.03);
+  margin-bottom: 20px;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.upload-dropzone:hover, .upload-dropzone.dragover {
+  border-color: #1e3a5f;
+  background: rgba(30,58,95,0.06);
+}
+.upload-dropzone-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 8px;
+  color: #1e3a5f;
+}
+.upload-dropzone-title {
+  font-size: 14px;
+  color: #1a2b3d;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.upload-dropzone-sub {
+  font-size: 11px;
+  color: #7d8590;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.upload-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: #7d8590;
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.upload-divider::before, .upload-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(30,43,61,0.1);
+}
+
+/* ============= MULTI-CORNER SELECTOR ============= */
+.corner-selector {
+  background: rgba(198,95,63,0.06);
+  border: 1px solid rgba(198,95,63,0.25);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.corner-selector-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: #c65f3f;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.corner-list { display: flex; flex-direction: column; gap: 8px; }
+.corner-item {
+  background: #ffffff;
+  padding: 10px 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(30,43,61,0.08);
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+.corner-item .num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: #c65f3f;
+  font-weight: 700;
+}
+.corner-item .name {
+  font-family: 'Noto Serif KR', serif;
+  font-weight: 700;
+  color: #1a2b3d;
+}
+.corner-item .meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: #7d8590;
+}
+
+/* ============= SCHEDULE (주간 편성) ============= */
+.schedule-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  background: #f0eadc;
+  border-bottom: 1px solid rgba(30,43,61,0.1);
+}
+.schedule-week-nav { display: flex; align-items: center; gap: 8px; }
+.schedule-week-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a2b3d;
+  padding: 0 12px;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 160px repeat(5, 1fr);
+  gap: 0;
+  background: #ffffff;
+  border: 1px solid rgba(30,43,61,0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 20px 32px;
+  box-shadow: 0 1px 3px rgba(30,43,61,0.04);
+}
+.schedule-header {
+  background: #efe7d5;
+  padding: 12px 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #1a2b3d;
+  border-bottom: 1px solid rgba(30,43,61,0.1);
+  border-right: 1px solid rgba(30,43,61,0.06);
+}
+.schedule-header.day { text-align: center; letter-spacing: 0.1em; }
+.schedule-header.day .date {
+  display: block;
+  font-size: 10px;
+  color: #7d8590;
+  font-weight: 500;
+  margin-top: 2px;
+}
+.schedule-row-label {
+  padding: 12px 14px;
+  background: #faf6ec;
+  border-bottom: 1px solid rgba(30,43,61,0.06);
+  border-right: 1px solid rgba(30,43,61,0.06);
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a2b3d;
+  display: flex;
+  align-items: center;
+}
+.schedule-cell {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(30,43,61,0.06);
+  border-right: 1px solid rgba(30,43,61,0.06);
+  cursor: pointer;
+  min-height: 70px;
+  transition: background 0.15s;
+  background: #ffffff;
+}
+.schedule-cell:hover { background: rgba(30,58,95,0.04); }
+.schedule-cell.empty { background: #fafaf5; cursor: pointer; }
+.schedule-cell.empty:hover { background: rgba(30,58,95,0.03); }
+.schedule-cell-corner {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(30,58,95,0.1);
+  color: #1e3a5f;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace;
+  margin-bottom: 4px;
+}
+.schedule-cell-guest {
+  font-size: 11px;
+  color: #1a2b3d;
+  line-height: 1.4;
+  padding: 1px 0;
+}
+.schedule-cell-guest-affil {
+  color: #7d8590;
+  font-size: 10px;
+}
+.schedule-cell-empty-hint {
+  color: #b8b0a0;
+  font-size: 10px;
+  text-align: center;
+  padding-top: 20px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ============= DRAWER ============= */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30,43,61,0.35);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 480px;
+  max-width: 90vw;
+  background: #ffffff;
+  z-index: 101;
+  overflow-y: auto;
+  box-shadow: -8px 0 24px rgba(30,43,61,0.15);
+  animation: slideIn 0.25s ease;
+}
+@keyframes slideIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.drawer-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(30,43,61,0.08);
+  background: #f0eadc;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.drawer-body { padding: 20px 24px; }
+.drawer-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: #4a5670;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 3px;
+}
+.drawer-close:hover { background: rgba(30,43,61,0.08); color: #1a2b3d; }
+
+.guest-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.guest-entry {
+  background: #f7f3e9;
+  border: 1px solid rgba(30,43,61,0.08);
+  border-radius: 4px;
+  padding: 12px;
+  position: relative;
+}
+.guest-entry .del-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: #b91c1c;
+  cursor: pointer;
+  opacity: 0.5;
+  padding: 4px;
+}
+.guest-entry .del-btn:hover { opacity: 1; }
+.guest-entry input {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(30,43,61,0.15);
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 3px;
+  margin-bottom: 4px;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.guest-entry input:focus { outline: none; border-color: #1e3a5f; }
+.guest-entry input.name { font-weight: 600; }
+.guest-entry input.affil { color: #4a5670; }
+
+.textarea-input {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(30,43,61,0.15);
+  padding: 10px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  font-family: 'Noto Sans KR', sans-serif;
+  resize: vertical;
+  min-height: 200px;
+  line-height: 1.6;
+}
+.textarea-input:focus { outline: none; border-color: #1e3a5f; box-shadow: 0 0 0 2px rgba(30,58,95,0.1); }
+
+/* ============= LEGEND ============= */
+.legend {
+  display: flex;
+  gap: 12px;
+  padding: 12px 32px;
+  font-size: 11px;
+  color: #7d8590;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
 </style>
 </head>
 <body>
@@ -700,6 +930,9 @@ body {
 <!-- Icons (Lucide) as SVG symbols for reuse -->
 <svg style="display:none">
   <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
   <symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
   <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
@@ -737,7 +970,7 @@ const PROGRAMS = [
   { id: 'watch', name: '마켓워치', shortName: '마켓워치' },
   { id: 'sungtoo', name: '성공투자 오후증시', shortName: '성투' }
 ];
-const KNOWN_MCS = ['김호정', '이혜수', '박현상'];
+const KNOWN_MCS = ['김호정', '이혜수'];
 
 const SAMPLE_TEXT = `#3 (11:27 ~11:40)
 포트폴리오 플러스 (13')
@@ -796,7 +1029,14 @@ const state = {
   confirmDelete: false,
   editedProgram: '',
   editedCorner: '',
-  editedDate: new Date().toISOString().slice(0, 10)
+  editedDate: new Date().toISOString().slice(0, 10),
+  currentCornerIndex: 0,        // 다중 코너 원고에서 현재 보는 코너 인덱스
+  // 주간 편성 관련
+  scheduleWeek: null,            // 'YYYY-MM-DD' 형식 (월요일)
+  scheduleData: {},              // { program: { day: { corner, guests[] } } }
+  scheduleDrawer: null,          // { program, day } — 열려있는 셀
+  scheduleImportOpen: false,
+  scheduleLoading: false
 };
 
 // ==============================================================
@@ -853,23 +1093,66 @@ async function deleteManuscript(id) {
 // ==============================================================
 // PARSER — 실제 원고 포맷 기반
 // ==============================================================
-function parseManuscript(rawText) {
+// ==============================================================
+// PARSER — 다중 코너 분리 + 다중 게스트 수집
+// ==============================================================
+
+// 코너 경계 감지 - ▶ 표시나 표 헤더로 시작하는 라인을 코너 시작으로 인식
+function detectCornerBoundaries(text) {
+  const lines = text.split('\n');
+  const boundaries = [];
+  const arrowRe = /^▶\s*(.+)$/;
+  const bracketCornerRe = /^\[([^\]]{2,15})\]$/;  // [마감], [복선] 등 (짧은 코너명만)
+  const cornerHeaderRe = /^\s*#\s*\d+\s*\((\d{1,2}:\d{2})/;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    if (arrowRe.test(line) || cornerHeaderRe.test(line) || bracketCornerRe.test(line)) {
+      // 코너명이 너무 흔한 단어면 스킵 (예: [답변], [인사])
+      const cornerName = (line.match(arrowRe)?.[1] || line.match(bracketCornerRe)?.[1] || '').trim();
+      if (/^(답변|인사|질문\d*|정리|내용|CG)$/.test(cornerName)) continue;
+      boundaries.push(i);
+    }
+  }
+
+  if (boundaries.length <= 1) {
+    return [{ text, startLine: 0 }];
+  }
+
+  const segments = [];
+  for (let i = 0; i < boundaries.length; i++) {
+    const start = boundaries[i];
+    const end = i < boundaries.length - 1 ? boundaries[i + 1] : lines.length;
+    segments.push({
+      text: lines.slice(start, end).join('\n'),
+      startLine: start
+    });
+  }
+  return segments;
+}
+
+// 개별 세그먼트 파싱
+function parseSegmentText(rawText) {
   const text = String(rawText || '').replace(/\r\n/g, '\n');
   const lines = text.split('\n');
 
   const result = {
     program: null, corner: null, cornerNo: null, airTime: null, duration: null,
     mc: null,
-    guest: { name: null, affiliation: null, title: null, career: [] },
+    guests: [],  // 다중 게스트 배열
+    guest: { name: null, affiliation: null, title: null, career: [] },  // 호환용 (첫 번째 게스트)
     questions: [],
     cgDirectives: { title: [], guestTag: [], sub: [], super: [], bottom: [], whole: [], ppt: [] },
     programMatch: null,
+    rawText: text,
     stats: { lines: 0, questions: 0, cgTotal: 0, charCount: text.length }
   };
 
   const cornerHeaderRe = /^\s*#?\s*(\d+)?\s*\(?(\d{1,2}:\d{2})\s*[~\-∼]\s*(\d{1,2}:\d{2})\)?/;
   const durationRe = /\((\d+)\s*[′''`]\)/;
   const arrowCornerRe = /^▶\s*(.+)$/;
+  const bracketCornerRe = /^\[([^\]]{2,15})\]$/;
   const cornerTitleRe = /^(좌상단|좌상단S)\s*>\s*(.*)$/;
   const guestTagRe = /^(우측네임|좌측네임|네임S)\s*>\s*(.+)$/;
   const subRe = /^서브(?:\s*\([12]단\))?\s*>\s*(.*)$/;
@@ -882,7 +1165,7 @@ function parseManuscript(rawText) {
   const qMarkerRe = /\((질문[\d\-]+|추가질문[\d\-]+)\)/;
   const qSungtooRe = /^(?:Q\.|\d+\.)\s*(.+)$/;
 
-  const titleSuffixes = ['수석연구위원', '연구위원', '본부장', '센터장', '이코노미스트', '대표', '이사', '팀장', '부장', '교수', '위원', '전무', '상무', '실장'];
+  const titleSuffixes = ['수석연구위원', '연구위원', '본부장', '센터장', '이코노미스트', '대표', '이사', '팀장', '부장', '교수', '위원', '전무', '상무', '실장', '차장', '과장', '소장', '지점장', '리서치센터장', '연구원', '기자', '앵커', 'PB'];
 
   function parseGuestInfo(guestStr) {
     const s = guestStr.trim();
@@ -895,12 +1178,15 @@ function parseManuscript(rawText) {
     return { name: parts[0], affiliation: parts.slice(1).join(' ') || null, title };
   }
 
+  let currentGuest = null;  // career 라인 부착용
   let questionBlock = null;
+
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
     const line = raw.trim();
     if (!line) continue;
 
+    // 방송 시간대·러닝타임
     const chMatch = line.match(cornerHeaderRe);
     if (chMatch && !result.airTime) {
       if (chMatch[1]) result.cornerNo = '#' + chMatch[1];
@@ -911,8 +1197,15 @@ function parseManuscript(rawText) {
     const durOnlyMatch = line.match(durationRe);
     if (durOnlyMatch && !result.duration) result.duration = durOnlyMatch[1];
 
+    // 코너명 감지 (▶ / [코너명] / 좌상단>)
     const arMatch = line.match(arrowCornerRe);
     if (arMatch && !result.corner) result.corner = arMatch[1].trim();
+
+    const brMatch = line.match(bracketCornerRe);
+    if (brMatch && !result.corner) {
+      const c = brMatch[1].trim();
+      if (!/^(답변|인사|질문\d*|정리|내용|CG)$/.test(c)) result.corner = c;
+    }
 
     const ctMatch = line.match(cornerTitleRe);
     if (ctMatch) {
@@ -925,21 +1218,29 @@ function parseManuscript(rawText) {
       if (c && c.length < 20 && !/[><]/.test(c)) result.corner = c;
     }
 
+    // 게스트 태그 (다중 수집)
     const gtMatch = line.match(guestTagRe);
     if (gtMatch) {
       const s = gtMatch[2].trim();
       const parsed = parseGuestInfo(s);
-      if (parsed.name && !result.guest.name) {
-        result.guest.name = parsed.name;
-        result.guest.affiliation = parsed.affiliation;
-        result.guest.title = parsed.title;
+      if (parsed.name) {
+        // 이미 있는 이름이면 중복 스킵
+        const exists = result.guests.some(g => g.name === parsed.name);
+        if (!exists) {
+          currentGuest = { ...parsed, career: [], raw: s };
+          result.guests.push(currentGuest);
+        }
       }
       result.cgDirectives.guestTag.push(s);
     }
 
+    // 이력 라인 - 현재 게스트에 부착
     const carMatch = line.match(careerRe);
-    if (carMatch) result.guest.career.push(line);
+    if (carMatch && currentGuest) {
+      currentGuest.career.push(line);
+    }
 
+    // CG 지시어
     let m;
     if ((m = line.match(subRe))) result.cgDirectives.sub.push(m[1] || '');
     if ((m = line.match(superRe))) result.cgDirectives.super.push(m[1] || '');
@@ -947,9 +1248,11 @@ function parseManuscript(rawText) {
     if ((m = line.match(wholeRe))) result.cgDirectives.whole.push(m[1] || '');
     if ((m = line.match(pptRe))) result.cgDirectives.ppt.push({ num: m[1], desc: m[2] || '' });
 
+    // MC 감지
     const spMatch = line.match(speakerRe);
     if (spMatch && KNOWN_MCS.includes(spMatch[1]) && !result.mc) result.mc = spMatch[1];
 
+    // 질문 감지
     const qMatch = line.match(qMarkerRe);
     if (qMatch) { questionBlock = { marker: qMatch[1], text: '' }; continue; }
     if (questionBlock) {
@@ -970,19 +1273,35 @@ function parseManuscript(rawText) {
     result.questions.push({ marker: questionBlock.marker, text: questionBlock.text.trim().slice(0, 200) });
   }
 
+  // 호환용: 첫 게스트를 top-level guest 로도 설정
+  if (result.guests.length > 0) {
+    const first = result.guests[0];
+    result.guest = {
+      name: first.name,
+      affiliation: first.affiliation,
+      title: first.title,
+      career: first.career
+    };
+  }
+
+  // 프로그램 매칭 (규칙 강화)
   if (result.corner) {
-    if (/내일 전략|하우스\s*뷰|디코딩\s*마켓|전략\s*인사이드|넥스트\s*시그널|복선/.test(result.corner)) {
+    const c = result.corner;
+    if (/내일 전략|하우스\s*뷰|디코딩\s*마켓|전략\s*인사이드|넥스트\s*시그널|복선|마감|위클리뷰/.test(c)) {
       result.programMatch = 'sungtoo';
       if (!result.program) result.program = '성공투자 오후증시';
     }
-    if (/매크로\s*인사이트|전략적\s*투자|포트폴리오\s*플러스/.test(result.corner)) {
-      if (!result.program) {
-        if (/포트폴리오/.test(result.corner)) result.program = '출발증시 2부';
-        else result.program = '마켓인사이트';
-      }
+    if (/매크로\s*인사이트|전략적\s*투자/.test(c)) {
+      if (!result.program) result.program = '마켓인사이트';
     }
-    if (/K.?스탁|k.?stock/i.test(result.corner)) {
+    if (/포트폴리오\s*플러스/.test(c)) {
+      if (!result.program) result.program = '출발증시 2부';
+    }
+    if (/K.?스탁|k.?stock/i.test(c)) {
       if (!result.program) result.program = 'K스탁 라이브';
+    }
+    if (/글로벌\s*마켓|굿모닝\s*한경|해외증시\s*브리핑/.test(c)) {
+      if (!result.program) result.program = '굿모닝 한경 글로벌마켓';
     }
   }
 
@@ -990,6 +1309,23 @@ function parseManuscript(rawText) {
   result.stats.questions = result.questions.length;
   result.stats.cgTotal = result.cgDirectives.sub.length + result.cgDirectives.super.length +
     result.cgDirectives.bottom.length + result.cgDirectives.whole.length + result.cgDirectives.ppt.length;
+  return result;
+}
+
+// 메인 파서 - 다중 코너 감지 후 각 세그먼트 파싱
+function parseManuscript(rawText) {
+  const text = String(rawText || '').replace(/\r\n/g, '\n');
+  const segments = detectCornerBoundaries(text);
+
+  // 각 세그먼트 파싱
+  const parsedSegments = segments.map(seg => parseSegmentText(seg.text));
+
+  // 첫 세그먼트를 top-level 로 노출 (호환성 유지) + segments 배열도 함께
+  const result = {
+    ...parsedSegments[0],
+    segments: parsedSegments,
+    isMultiCorner: parsedSegments.length > 1
+  };
   return result;
 }
 
@@ -1114,6 +1450,9 @@ function renderSidebar() {
           ${icon('i-archive', 15)}<span class="label">아카이브</span>
           ${totalStocked > 0 ? `<span class="badge">${totalStocked}</span>` : ''}
         </button>
+        <button class="nav-item ${state.view === 'schedule' ? 'active' : ''}" data-nav="schedule">
+          ${icon('i-calendar', 15)}<span class="label">주간 편성</span>
+        </button>
         <button class="nav-item ${state.view === 'search' ? 'active' : ''}" data-nav="search">
           ${icon('i-search', 15)}<span class="label">통합 검색</span>
         </button>
@@ -1130,10 +1469,10 @@ function renderSidebar() {
       <div class="sidebar-footer">
         <div class="settings-btn has-key" style="cursor:default">
           ${icon('i-check', 12)}
-          <span>네이버 맞춤법 · 무료 검수</span>
+          <span>부산대 맞춤법 · 무료 검수</span>
         </div>
-        한국경제TV / 한경글로벌TV<br>
-        제작본부 · 프로토타입
+        한국경제 TV<br>
+        제작1부
       </div>
     </aside>
   `;
@@ -1147,6 +1486,7 @@ function renderMain() {
     case 'archive': return renderArchive();
     case 'detail': return renderDetail();
     case 'search': return renderSearch();
+    case 'schedule': return renderSchedule();
     default: return '';
   }
 }
@@ -1156,7 +1496,7 @@ function renderUpload() {
   return `
     <div class="scroll-y" style="padding:40px 48px;max-width:900px;margin:0 auto;flex:1">
       <div class="mono text-cyan" style="font-size:11px;letter-spacing:0.2em;margin-bottom:8px">STEP 01 · UPLOAD</div>
-      <h1 class="serif" style="font-size:32px;font-weight:900;color:white;margin-bottom:8px;letter-spacing:-0.01em">원고를 업로드하거나 붙여넣어 주세요</h1>
+      <h1 class="serif" style="font-size:32px;font-weight:900;color:#1a2b3d;margin-bottom:8px;letter-spacing:-0.01em">원고를 업로드하거나 붙여넣어 주세요</h1>
       <p class="text-muted" style="font-size:14px;margin-bottom:32px;line-height:1.7">
         DOCX 파일을 드래그하거나 파일 선택 → 자동으로 텍스트 추출됩니다.
         HWP 파일은 아직 지원되지 않아 열어서 텍스트를 붙여넣기 해주세요.
@@ -1188,17 +1528,17 @@ function renderUpload() {
       <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-top:40px">
         <div class="card fade-in">
           <div class="mono text-cyan" style="font-size:10px;letter-spacing:0.15em;margin-bottom:6px">PARSER</div>
-          <div class="serif" style="font-size:15px;font-weight:700;color:white;margin-bottom:4px">포맷 자동 인식</div>
+          <div class="serif" style="font-size:15px;font-weight:700;color:#1a2b3d;margin-bottom:4px">포맷 자동 인식</div>
           <div class="text-muted" style="font-size:12px;line-height:1.6">서브&gt; 수퍼&gt; 하단S&gt; 통CG&gt; PPT&gt; 등 CG 지시어와 게스트 프로필을 자동 분리</div>
         </div>
         <div class="card fade-in">
           <div class="mono text-cyan" style="font-size:10px;letter-spacing:0.15em;margin-bottom:6px">CHECK</div>
-          <div class="serif" style="font-size:15px;font-weight:700;color:white;margin-bottom:4px">네이버 맞춤법 검사</div>
+          <div class="serif" style="font-size:15px;font-weight:700;color:#1a2b3d;margin-bottom:4px">네이버 맞춤법 검사</div>
           <div class="text-muted" style="font-size:12px;line-height:1.6">규칙 기반 즉시 + 네이버 맞춤법 검사기 (무료)</div>
         </div>
         <div class="card fade-in">
           <div class="mono text-cyan" style="font-size:10px;letter-spacing:0.15em;margin-bottom:6px">STOCK</div>
-          <div class="serif" style="font-size:15px;font-weight:700;color:white;margin-bottom:4px">메타데이터 추출</div>
+          <div class="serif" style="font-size:15px;font-weight:700;color:#1a2b3d;margin-bottom:4px">메타데이터 추출</div>
           <div class="text-muted" style="font-size:12px;line-height:1.6">게스트·질문·종목·기관·이벤트·섹터를 사전 기반 자동 태깅</div>
         </div>
       </div>
@@ -1219,7 +1559,7 @@ function renderCheck() {
       <button class="btn btn-secondary" data-action="back-upload" style="padding:6px 10px">${icon('i-left')} 처음으로</button>
       <div class="step-label">STEP 02 · CHECK</div>
       <div style="flex:1">
-        <div class="serif" style="font-size:16px;font-weight:700;color:white">
+        <div class="serif" style="font-size:16px;font-weight:700;color:#1a2b3d">
           ${esc(p.corner || '원고 검수')}
           ${p.duration ? `<span class="text-mute2" style="font-size:13px;margin-left:8px;font-weight:400">(${esc(p.duration)}′)</span>` : ''}
         </div>
@@ -1251,7 +1591,7 @@ function renderCheck() {
         ${allChecks.length === 0 ? `
           <div style="padding:32px;text-align:center">
             ${icon('i-check', 32)}
-            <div class="serif" style="font-size:16px;color:white;margin:12px 0 6px">검수 통과</div>
+            <div class="serif" style="font-size:16px;color:#1a2b3d;margin:12px 0 6px">검수 통과</div>
             <div class="text-muted" style="font-size:12px">기본 규칙에서 발견된 문제 없음.<br>AI 검수로 문맥 확인 권장.</div>
           </div>
         ` : allChecks.map(c => renderFinding(c)).join('')}
@@ -1319,9 +1659,13 @@ function renderHighlightedText(text, checks) {
 
 // ---------- STOCK ----------
 function renderStock() {
-  const p = state.manuscript.parsed;
+  const parsed = state.manuscript.parsed;
+  const segments = parsed.segments || [parsed];
+  const currentIdx = state.currentCornerIndex || 0;
+  const p = segments[currentIdx] || parsed;
   const ex = state.aiExtract;
-  const cg = p.cgDirectives;
+  const cg = p.cgDirectives || { sub: [], super: [], bottom: [], whole: [], ppt: [], guestTag: [] };
+  const isMulti = segments.length > 1;
 
   return `
     <div class="scroll-y" style="padding:24px 32px;flex:1">
@@ -1329,19 +1673,42 @@ function renderStock() {
         <button class="btn btn-secondary" data-action="back-check" style="padding:6px 10px">${icon('i-left')} 검수로</button>
         <div class="step-label">STEP 03 · STOCK</div>
         <div style="flex:1">
-          <div class="serif" style="font-size:22px;font-weight:800;color:white">자동 추출된 정보 확인 & 저장</div>
-          <div class="text-muted" style="font-size:12px;margin-top:2px">잘못된 필드는 수정 가능</div>
+          <div class="serif" style="font-size:22px;font-weight:800;color:#1a2b3d">자동 추출된 정보 확인 & 저장</div>
+          <div class="text-muted" style="font-size:12px;margin-top:2px">${isMulti ? `다중 코너 감지 · ${segments.length}개` : '잘못된 필드는 수정 가능'}</div>
         </div>
         <button class="btn btn-secondary" data-action="run-ai-extract" ${state.aiExtractLoading ? 'disabled' : ''}>
           ${state.aiExtractLoading ? '<span class="loading-spin"></span>' : icon('i-sparkles')}
           ${state.aiExtractLoading ? '추출 중...' : (ex ? '재추출' : '메타데이터 자동 추출')}
         </button>
-        <button class="btn btn-primary" data-action="save-stock">${icon('i-save')} STOCK 저장</button>
+        <button class="btn btn-primary" data-action="save-stock">${icon('i-save')} ${isMulti ? `${segments.length}개 코너 모두 저장` : 'STOCK 저장'}</button>
       </div>
+
+      ${isMulti ? `
+        <div class="corner-selector">
+          <div class="corner-selector-title">${icon('i-layers', 11)} 이 원고에 여러 코너가 감지되었습니다 — 각각 별도 STOCK 으로 저장됩니다</div>
+          <div class="corner-list">
+            ${segments.map((seg, i) => `
+              <div class="corner-item" style="cursor:pointer;${i === currentIdx ? 'border-color:#c65f3f;background:#fef5f0;' : ''}" data-action="select-corner" data-idx="${i}">
+                <div class="num">${i === currentIdx ? '▶' : ''} ${i + 1}</div>
+                <div>
+                  <div class="name">${esc(seg.corner || '(코너명 미확정)')}</div>
+                  <div class="meta">
+                    ${(seg.guests || []).length > 0 ? `게스트 ${seg.guests.length}명` : '게스트 없음'} ·
+                    질문 ${seg.questions.length}개 · CG ${seg.stats.cgTotal}개
+                  </div>
+                </div>
+                <div class="meta">
+                  ${(seg.guests || []).slice(0, 2).map(g => esc(g.name)).join(', ')}${seg.guests?.length > 2 ? '...' : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
 
       <div class="stock-grid">
         <div>
-          <div class="section-title">${icon('i-file')}<span class="lbl">방송 정보</span></div>
+          <div class="section-title">${icon('i-file')}<span class="lbl">방송 정보 ${isMulti ? `· 코너 ${currentIdx + 1}` : ''}</span></div>
           <div class="card" style="margin-bottom:20px">
             <div class="field-row">
               <div class="field-label">프로그램</div>
@@ -1360,7 +1727,7 @@ function renderStock() {
             </div>
             <div class="field-row">
               <div class="field-label">방송시간</div>
-              <span class="mono" style="font-size:12px;color:#22d3ee">${esc(p.airTime || '—')} ${p.duration ? '(' + esc(p.duration) + '′)' : ''}</span>
+              <span class="mono" style="font-size:12px;color:#1e3a5f">${esc(p.airTime || '—')} ${p.duration ? '(' + esc(p.duration) + '′)' : ''}</span>
             </div>
             <div class="field-row">
               <div class="field-label">MC</div>
@@ -1368,30 +1735,32 @@ function renderStock() {
             </div>
           </div>
 
-          <div class="section-title">${icon('i-user')}<span class="lbl">출연자 정보</span></div>
+          <div class="section-title">${icon('i-user')}<span class="lbl">출연자 정보 (${(p.guests || []).length}명)</span></div>
           <div class="card" style="margin-bottom:20px">
-            ${p.guest?.name ? `
-              <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
-                <div class="serif" style="font-size:20px;font-weight:900;color:white">${esc(p.guest.name)}</div>
-                ${p.guest.title ? `<span class="chip cyan">${esc(p.guest.title)}</span>` : ''}
-              </div>
-              ${p.guest.affiliation ? `<div class="text-muted" style="font-size:13px;margin-bottom:12px">${icon('i-building', 11)} ${esc(p.guest.affiliation)}</div>` : ''}
-              ${p.guest.career.length > 0 ? `
-                <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;margin-top:8px">
-                  <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.15em;margin-bottom:6px">CAREER</div>
-                  ${p.guest.career.map(c => `<div style="font-size:12px;color:#cbd5e1;padding:2px 0">${esc(c)}</div>`).join('')}
+            ${(p.guests && p.guests.length > 0) ? p.guests.map((g, gi) => `
+              <div style="padding:${gi > 0 ? '12px 0 0' : '0'};${gi > 0 ? 'border-top:1px solid rgba(30,43,61,0.08);margin-top:12px;' : ''}">
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+                  <div class="serif" style="font-size:${gi === 0 ? '20px' : '16px'};font-weight:${gi === 0 ? '900' : '700'};color:#1a2b3d">${esc(g.name)}</div>
+                  ${g.title ? `<span class="chip cyan">${esc(g.title)}</span>` : ''}
                 </div>
-              ` : ''}
-            ` : `<div class="text-mute2" style="font-size:12px;font-style:italic">게스트 정보 자동 인식 실패. 원고에 <span class="mono text-cyan">우측네임&gt;</span> <span class="mono text-cyan">네임S&gt;</span> 태그가 있는지 확인.</div>`}
+                ${g.affiliation ? `<div class="text-muted" style="font-size:13px;margin-bottom:${g.career.length > 0 ? '10px' : '0'}">${icon('i-building', 11)} ${esc(g.affiliation)}</div>` : ''}
+                ${g.career.length > 0 ? `
+                  <div style="padding-top:8px;border-top:1px solid rgba(30,43,61,0.06);margin-top:6px">
+                    <div class="mono text-mute2" style="font-size:9px;letter-spacing:0.15em;margin-bottom:4px">CAREER</div>
+                    ${g.career.map(c => `<div style="font-size:11px;color:#4a5670;padding:1px 0">${esc(c)}</div>`).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('') : `<div class="text-mute2" style="font-size:12px;font-style:italic">게스트 정보 자동 인식 실패. 원고에 <span class="mono text-cyan">우측네임&gt;</span> <span class="mono text-cyan">네임S&gt;</span> 태그가 있는지 확인.</div>`}
           </div>
 
           <div class="section-title">${icon('i-msg')}<span class="lbl">질문 리스트 (${p.questions.length})</span></div>
           <div class="card scroll-y" style="max-height:260px">
             ${p.questions.length === 0 ? `<div class="text-mute2" style="font-size:12px;font-style:italic">질문 자동 인식 실패</div>` :
               p.questions.map((q, i) => `
-                <div style="padding:8px 0;border-bottom:${i < p.questions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'}">
+                <div style="padding:8px 0;border-bottom:${i < p.questions.length - 1 ? '1px solid rgba(30,43,61,0.06)' : 'none'}">
                   <div class="mono text-cyan" style="font-size:10px;font-weight:700;margin-bottom:2px">${esc(q.marker)}</div>
-                  <div style="font-size:12px;color:#cbd5e1;line-height:1.5">${esc(q.text)}</div>
+                  <div style="font-size:12px;color:#4a5670;line-height:1.5">${esc(q.text)}</div>
                 </div>
               `).join('')
             }
@@ -1410,9 +1779,9 @@ function renderStock() {
               ${renderCGStat('네임', cg.guestTag.length)}
             </div>
             ${cg.sub.length > 0 ? `
-              <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(30,43,61,0.08)">
                 <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.15em;margin-bottom:6px">서브 CG 프리뷰</div>
-                ${cg.sub.slice(0, 3).map(s => `<div style="font-size:11px;color:#cbd5e1;padding:2px 0">· ${esc(s)}</div>`).join('')}
+                ${cg.sub.slice(0, 3).map(s => `<div style="font-size:11px;color:#4a5670;padding:2px 0">· ${esc(s)}</div>`).join('')}
                 ${cg.sub.length > 3 ? `<div class="text-mute2" style="font-size:10px;margin-top:4px">...외 ${cg.sub.length - 3}개</div>` : ''}
               </div>
             ` : ''}
@@ -1431,10 +1800,10 @@ function renderStock() {
               ${ex.events?.length > 0 ? renderExtractRow('i-zap', '주요 이벤트', ex.events.map(e => `<span class="chip amber">${esc(e)}</span>`).join('')) : ''}
               ${ex.sectors?.length > 0 ? renderExtractRow('i-tag', '섹터/테마', ex.sectors.map(s => `<span class="chip emerald">${esc(s)}</span>`).join('')) : ''}
               ${ex.questionSummaries?.length > 0 ? `
-                <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
+                <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(30,43,61,0.08)">
                   <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.15em;margin-bottom:8px">질문 요약 (AI)</div>
                   ${ex.questionSummaries.map((qs, i) => `
-                    <div style="font-size:12px;color:#cbd5e1;padding:3px 0">
+                    <div style="font-size:12px;color:#4a5670;padding:3px 0">
                       <span class="mono text-cyan" style="margin-right:6px">Q${i+1}</span>${esc(qs)}
                     </div>
                   `).join('')}
@@ -1452,10 +1821,10 @@ function renderStock() {
           <div class="section-title">${icon('i-db')}<span class="lbl">통계</span></div>
           <div class="card">
             <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:12px">
-              <div><div class="mono" style="font-size:18px;font-weight:700;color:white">${p.stats.charCount.toLocaleString()}</div><div class="text-muted" style="font-size:10px;margin-top:2px">글자수</div></div>
-              <div><div class="mono" style="font-size:18px;font-weight:700;color:white">${p.stats.lines}</div><div class="text-muted" style="font-size:10px;margin-top:2px">라인수</div></div>
-              <div><div class="mono" style="font-size:18px;font-weight:700;color:white">${p.stats.questions}</div><div class="text-muted" style="font-size:10px;margin-top:2px">질문수</div></div>
-              <div><div class="mono" style="font-size:18px;font-weight:700;color:white">${p.stats.cgTotal}</div><div class="text-muted" style="font-size:10px;margin-top:2px">CG총합</div></div>
+              <div><div class="mono" style="font-size:18px;font-weight:700;color:#1a2b3d">${p.stats.charCount.toLocaleString()}</div><div class="text-muted" style="font-size:10px;margin-top:2px">글자수</div></div>
+              <div><div class="mono" style="font-size:18px;font-weight:700;color:#1a2b3d">${p.stats.lines}</div><div class="text-muted" style="font-size:10px;margin-top:2px">라인수</div></div>
+              <div><div class="mono" style="font-size:18px;font-weight:700;color:#1a2b3d">${p.stats.questions}</div><div class="text-muted" style="font-size:10px;margin-top:2px">질문수</div></div>
+              <div><div class="mono" style="font-size:18px;font-weight:700;color:#1a2b3d">${p.stats.cgTotal}</div><div class="text-muted" style="font-size:10px;margin-top:2px">CG총합</div></div>
             </div>
           </div>
         </div>
@@ -1469,7 +1838,7 @@ function renderCGStat(label, count) {
 }
 function renderExtractRow(iconId, label, contentHtml) {
   return `
-    <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+    <div style="padding:8px 0;border-bottom:1px solid rgba(30,43,61,0.06)">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
         ${icon(iconId, 11)}
         <span class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em">${esc(label)}</span>
@@ -1488,7 +1857,7 @@ function renderArchive() {
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
         <div style="flex:1">
           <div class="mono text-cyan" style="font-size:11px;letter-spacing:0.2em">ARCHIVE</div>
-          <h1 class="serif" style="font-size:28px;font-weight:900;color:white;margin-top:4px">프로그램 아카이브</h1>
+          <h1 class="serif" style="font-size:28px;font-weight:900;color:#1a2b3d;margin-top:4px">프로그램 아카이브</h1>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           ${icon('i-filter')}
@@ -1573,15 +1942,15 @@ function renderDetail() {
               ${p.airTime ? `<div class="mono text-cyan" style="font-size:12px">${esc(p.airTime)}</div>` : ''}
               ${p.duration ? `<div class="mono text-mute2" style="font-size:12px">(${esc(p.duration)}′)</div>` : ''}
             </div>
-            <div class="serif" style="font-size:26px;font-weight:900;color:white;margin-bottom:8px">${esc(p.corner || '(코너명 미지정)')}</div>
+            <div class="serif" style="font-size:26px;font-weight:900;color:#1a2b3d;margin-bottom:8px">${esc(p.corner || '(코너명 미지정)')}</div>
             <div class="text-muted" style="font-size:13px">
               ${esc(m.airDate || '')} · MC ${esc(p.mc || '—')}
-              ${p.guest?.name ? ` · 게스트 <span style="color:white">${esc(p.guest.name)}</span> ${p.guest.affiliation ? '(' + esc(p.guest.affiliation) + ')' : ''}` : ''}
+              ${p.guest?.name ? ` · 게스트 <span style="color:#1a2b3d">${esc(p.guest.name)}</span> ${p.guest.affiliation ? '(' + esc(p.guest.affiliation) + ')' : ''}` : ''}
             </div>
           </div>
-          <div style="background:#faf7ef;padding:24px;border-radius:6px">
+          <div style="background:#ffffff;padding:24px;border-radius:6px">
             <div class="mono" style="font-size:10px;color:#6b7280;letter-spacing:0.15em;margin-bottom:12px">MANUSCRIPT</div>
-            <pre class="serif" style="white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.9;color:#1a1a2e;font-family:'Noto Serif KR',serif;margin:0">${esc(m.raw || '(원문 없음)')}</pre>
+            <pre class="serif" style="white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.9;color:#1a2b3d;font-family:'Noto Serif KR',serif;margin:0">${esc(m.raw || '(원문 없음)')}</pre>
           </div>
         </div>
 
@@ -1589,11 +1958,11 @@ function renderDetail() {
           <div class="section-title">${icon('i-user')}<span class="lbl">출연자</span></div>
           <div class="card" style="margin-bottom:16px">
             ${p.guest?.name ? `
-              <div class="serif" style="font-size:16px;font-weight:800;color:white">${esc(p.guest.name)}</div>
+              <div class="serif" style="font-size:16px;font-weight:800;color:#1a2b3d">${esc(p.guest.name)}</div>
               <div class="text-muted" style="font-size:12px;margin-top:2px">${esc(p.guest.affiliation || '')} ${p.guest.title ? '· ' + esc(p.guest.title) : ''}</div>
               ${(p.guest.career || []).length > 0 ? `
-                <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
-                  ${p.guest.career.map(c => `<div style="font-size:11px;color:#94a3b8;padding:2px 0">${esc(c)}</div>`).join('')}
+                <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(30,43,61,0.06)">
+                  ${p.guest.career.map(c => `<div style="font-size:11px;color:#6b7280;padding:2px 0">${esc(c)}</div>`).join('')}
                 </div>
               ` : ''}
             ` : `<div class="text-mute2" style="font-size:12px;font-style:italic">미인식</div>`}
@@ -1622,9 +1991,9 @@ function renderDetail() {
           <div class="card scroll-y" style="max-height:300px">
             ${(!p.questions || p.questions.length === 0) ? `<div class="text-mute2" style="font-size:11px;font-style:italic">없음</div>` :
               p.questions.map(q => `
-                <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                <div style="padding:6px 0;border-bottom:1px solid rgba(30,43,61,0.06)">
                   <div class="mono text-cyan" style="font-size:10px;margin-bottom:2px">${esc(q.marker)}</div>
-                  <div style="font-size:11px;color:#cbd5e1;line-height:1.5">${esc(q.text)}</div>
+                  <div style="font-size:11px;color:#4a5670;line-height:1.5">${esc(q.text)}</div>
                 </div>
               `).join('')
             }
@@ -1649,7 +2018,7 @@ function renderSearch() {
   return `
     <div class="scroll-y" style="padding:32px 40px;flex:1">
       <div class="mono text-cyan" style="font-size:11px;letter-spacing:0.2em;margin-bottom:4px">SEARCH</div>
-      <h1 class="serif" style="font-size:28px;font-weight:900;color:white;margin-bottom:24px">통합 검색</h1>
+      <h1 class="serif" style="font-size:28px;font-weight:900;color:#1a2b3d;margin-bottom:24px">통합 검색</h1>
       <div style="position:relative;margin-bottom:24px">
         <div style="position:absolute;left:14px;top:14px;color:#64748b">${icon('i-search', 16)}</div>
         <input autofocus type="text" class="paste-area" id="search-input" value="${esc(state.searchQuery)}" placeholder="게스트명 · 종목명 · 이벤트 · 섹터 · 코너명 등" style="padding:12px 12px 12px 40px;font-size:14px;height:auto;font-family:'Noto Sans KR',sans-serif">
@@ -1668,6 +2037,474 @@ function renderModal() {
 }
 
 // ==============================================================
+// SCHEDULE — 주간 편성 (파서 + 스토리지 + 렌더러 + 드로어)
+// ==============================================================
+
+const DAY_NAMES = ['월', '화', '수', '목', '금'];
+
+function getMondayOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function toISODate(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getWeekDates(mondayIso) {
+  const monday = new Date(mondayIso);
+  return Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
+function formatDateShort(d) {
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+// -------- 스케줄 파서 (톡방 텍스트 → 구조화) --------
+function parseScheduleText(text) {
+  const lines = text.split('\n').map(l => l.trim());
+  const entries = [];  // { program, day, corner, guests: [{name,affiliation,title,mode}] }
+
+  let currentProgram = null;
+  let currentDay = null;
+  let currentDate = null;
+  let currentCorner = null;
+  let currentCategory = null;
+
+  // 프로그램 헤더 패턴들
+  const programHeaderRe1 = /^\[([^\]]+?)(?:\s*-\s*(?:다음주|이번주|주간)?\s*스케줄)?\]$/;   // [성공투자 오후증시 - 다음주 스케줄]
+  const programHeaderRe2 = /^<([^>]+?)>\s*(\d{4}[-–]\d{4})?\s*(?:스케줄)?$/;    // <굿모닝> 0727-0731 스케줄
+  // 날짜 헤더: 7/27 (월)
+  const dateHeaderRe = /^(\d{1,2})\/(\d{1,2})\s*\(([월화수목금토일])\)$/;
+  // 코너 헤더: [마감] [복선]  — 프로그램 헤더와 구분 필요 (짧고 "스케줄" 없어야)
+  const cornerHeaderRe = /^\[([^\]]{2,15})\]$/;
+  // 카테고리 헤더: 특파원) 섭외)
+  const categoryRe = /^(특파원|섭외|MC|앵커|게스트|리포터|출연자)\s*[):：]?\s*$/;
+  // Format 2 개별 라인: 화 / 김종학 뉴욕
+  const format2EntryRe = /^([월화수목금토일])\s*\/\s*(.+)$/;
+
+  const titleSuffixes = ['수석연구위원', '연구위원', '본부장', '센터장', '이코노미스트', '대표', '이사', '팀장', '부장', '교수', '위원', '전무', '상무', '실장', '차장', '과장', '소장', '지점장', '연구원', '기자', '앵커', 'PB', '뉴욕', '워싱턴', '실리콘밸리', '베이징', '도쿄', '런던', '파리', '홍콩'];
+
+  function parseGuestLine(s) {
+    let raw = s.trim();
+    // 뒤에 (화상), (전화) 등 출연방식 추출
+    const modeMatch = raw.match(/\(([^)]+)\)$/);
+    let mode = null;
+    if (modeMatch) {
+      mode = modeMatch[1];
+      raw = raw.slice(0, modeMatch.index).trim();
+    }
+    let title = null; let rest = raw;
+    for (const suf of titleSuffixes) {
+      if (raw.endsWith(suf)) { title = suf; rest = raw.slice(0, -suf.length).trim(); break; }
+    }
+    const parts = rest.split(/\s+/);
+    if (parts.length === 0) return { name: raw, affiliation: null, title, mode };
+    return { name: parts[0], affiliation: parts.slice(1).join(' ') || null, title, mode };
+  }
+
+  function pushEntry(program, day, corner, guest) {
+    if (!program || !day || !guest?.name) return;
+    let entry = entries.find(e => e.program === program && e.day === day && e.corner === corner);
+    if (!entry) {
+      entry = { program, day, corner, guests: [], date: currentDate };
+      entries.push(entry);
+    }
+    // 중복 방지
+    const dup = entry.guests.some(g => g.name === guest.name && g.affiliation === guest.affiliation);
+    if (!dup) entry.guests.push(guest);
+  }
+
+  // 프로그램명 정규화
+  function normalizeProgramName(raw) {
+    if (!raw) return null;
+    const r = raw.trim();
+    if (/성공투자|성투/.test(r)) return '성공투자 오후증시';
+    if (/굿모닝|글로벌\s*마켓/.test(r)) return '굿모닝 한경 글로벌마켓';
+    if (/머니플러스/.test(r)) return '머니플러스';
+    if (/출발증시\s*1/.test(r)) return '출발증시 1부';
+    if (/출발증시\s*2|포트폴리오\s*플러스/.test(r)) return '출발증시 2부';
+    if (/마켓인사이트/.test(r)) return '마켓인사이트';
+    if (/K.?스탁/.test(r)) return 'K스탁 라이브';
+    if (/마켓워치/.test(r)) return '마켓워치';
+    return r;
+  }
+
+  for (const line of lines) {
+    if (!line) continue;
+
+    // 프로그램 헤더 우선 체크 (스케줄 키워드 포함)
+    if (/스케줄/.test(line)) {
+      let m = line.match(programHeaderRe1);
+      if (m) {
+        currentProgram = normalizeProgramName(m[1]);
+        currentDay = null; currentCorner = null; currentCategory = null;
+        continue;
+      }
+      m = line.match(programHeaderRe2);
+      if (m) {
+        currentProgram = normalizeProgramName(m[1]);
+        currentDay = null; currentCorner = null; currentCategory = null;
+        continue;
+      }
+    }
+
+    // 날짜 헤더
+    let m = line.match(dateHeaderRe);
+    if (m) {
+      currentDate = `${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+      currentDay = m[3];
+      currentCorner = null;
+      continue;
+    }
+
+    // 카테고리 (특파원, 섭외)
+    m = line.match(categoryRe);
+    if (m) {
+      currentCategory = m[1];
+      continue;
+    }
+
+    // Format 2: 요일 / 이름 소속
+    m = line.match(format2EntryRe);
+    if (m) {
+      const day = m[1];
+      const guest = parseGuestLine(m[2]);
+      pushEntry(currentProgram, day, currentCategory, guest);
+      continue;
+    }
+
+    // 코너 헤더 [코너명]
+    m = line.match(cornerHeaderRe);
+    if (m) {
+      const c = m[1].trim();
+      if (!/^(답변|인사|질문\d*|정리|내용|CG)$/.test(c) && !/스케줄/.test(c)) {
+        currentCorner = c;
+        continue;
+      }
+    }
+
+    // 일반 게스트 라인
+    if (currentProgram && currentDay) {
+      const guest = parseGuestLine(line);
+      if (guest.name && guest.name.length >= 2 && guest.name.length <= 4) {
+        pushEntry(currentProgram, currentDay, currentCorner, guest);
+      }
+    }
+  }
+
+  return entries;
+}
+
+// -------- 스케줄 스토리지 API --------
+async function fetchScheduleWeek(weekMonday) {
+  try {
+    const resp = await fetch(`/api/schedule/${encodeURIComponent(weekMonday)}`);
+    if (!resp.ok) return {};
+    const data = await resp.json();
+    return data.entries || {};
+  } catch (e) {
+    console.error('스케줄 로드 실패', e);
+    return {};
+  }
+}
+
+async function saveScheduleWeek(weekMonday, entries) {
+  const resp = await fetch(`/api/schedule/${encodeURIComponent(weekMonday)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entries })
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
+
+// -------- 렌더러 --------
+function scheduleKey(program, day) {
+  return `${program}|${day}`;
+}
+
+function renderSchedule() {
+  const week = state.scheduleWeek || toISODate(getMondayOfWeek(new Date()));
+  const dates = getWeekDates(week);
+
+  return `
+    <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+      <div class="schedule-toolbar">
+        <div class="schedule-week-nav">
+          <button class="btn btn-secondary" data-action="prev-week" style="padding:6px 10px" title="이전 주">${icon('i-left')}</button>
+          <span class="schedule-week-label">${esc(week)} 주 · ${dates[0].getMonth() + 1}/${dates[0].getDate()} ~ ${dates[4].getMonth() + 1}/${dates[4].getDate()}</span>
+          <button class="btn btn-secondary" data-action="next-week" style="padding:6px 10px" title="다음 주">${icon('i-right')}</button>
+        </div>
+        <button class="btn btn-secondary" data-action="today-week">이번 주로</button>
+        <div style="flex:1"></div>
+        ${state.scheduleLoading ? '<span class="loading-spin"></span>' : ''}
+        <button class="btn btn-primary" data-action="import-schedule">${icon('i-plus', 13)} 톡방 텍스트 붙여넣기</button>
+      </div>
+
+      <div class="schedule-grid">
+        <div class="schedule-header">프로그램</div>
+        ${DAY_NAMES.map((d, i) => `
+          <div class="schedule-header day">
+            ${d}
+            <span class="date">${formatDateShort(dates[i])}</span>
+          </div>
+        `).join('')}
+
+        ${PROGRAMS.map(prog => `
+          <div class="schedule-row-label">${esc(prog.shortName)}</div>
+          ${DAY_NAMES.map(day => {
+            const entry = state.scheduleData[scheduleKey(prog.name, day)];
+            return renderScheduleCell(prog.name, day, entry);
+          }).join('')}
+        `).join('')}
+      </div>
+
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:rgba(30,58,95,0.15);border:1px solid #1e3a5f"></span>편성 있음</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#fafaf5;border:1px solid rgba(30,43,61,0.1)"></span>미정</div>
+        <div class="legend-item" style="margin-left:auto">셀 클릭 → 상세 편집</div>
+      </div>
+
+      ${state.scheduleImportOpen ? renderScheduleImport() : ''}
+      ${state.scheduleDrawer ? renderScheduleDrawer() : ''}
+    </div>
+  `;
+}
+
+function renderScheduleCell(program, day, entry) {
+  const hasData = entry && (entry.corner || (entry.guests && entry.guests.length > 0));
+  if (!hasData) {
+    return `<div class="schedule-cell empty" data-action="open-drawer" data-program="${esc(program)}" data-day="${day}">
+      <div class="schedule-cell-empty-hint">+ 편성</div>
+    </div>`;
+  }
+  return `
+    <div class="schedule-cell" data-action="open-drawer" data-program="${esc(program)}" data-day="${day}">
+      ${entry.corner ? `<div class="schedule-cell-corner">${esc(entry.corner)}</div>` : ''}
+      ${(entry.guests || []).slice(0, 3).map(g => `
+        <div class="schedule-cell-guest">
+          <strong>${esc(g.name)}</strong>
+          ${g.affiliation ? `<span class="schedule-cell-guest-affil"> · ${esc(g.affiliation.length > 15 ? g.affiliation.slice(0, 14) + '…' : g.affiliation)}</span>` : ''}
+        </div>
+      `).join('')}
+      ${entry.guests?.length > 3 ? `<div class="schedule-cell-guest-affil">외 ${entry.guests.length - 3}명</div>` : ''}
+    </div>
+  `;
+}
+
+function renderScheduleImport() {
+  return `
+    <div class="drawer-backdrop" data-action="close-import"></div>
+    <div class="drawer" onclick="event.stopPropagation()">
+      <div class="drawer-header">
+        <div class="mono text-cyan" style="font-size:10px;letter-spacing:0.2em;margin-bottom:4px">TOKROOM PASTE</div>
+        <div class="serif" style="font-size:20px;font-weight:900;color:#1a2b3d">톡방 스케줄 붙여넣기</div>
+        <button class="drawer-close" data-action="close-import">${icon('i-x', 16)}</button>
+      </div>
+      <div class="drawer-body">
+        <p class="text-muted" style="font-size:12px;line-height:1.6;margin-bottom:16px">
+          카톡방에 올라온 스케줄 텍스트를 그대로 붙여넣으세요. 프로그램별·요일별로 자동 인식됩니다.
+          <br>지원 포맷:
+          <br>· <code style="background:#f0eadc;padding:2px 4px;border-radius:3px">[프로그램 - 스케줄]</code> 형식
+          <br>· <code style="background:#f0eadc;padding:2px 4px;border-radius:3px">&lt;프로그램&gt; 스케줄</code> 형식 (요일 / 이름)
+        </p>
+        <textarea class="textarea-input" id="schedule-import-text" placeholder="[성공투자 오후증시 - 다음주 스케줄]&#10;7/27 (월)&#10;[마감]&#10;정경민 IBK투자증권 분당지점 팀장&#10;..." style="min-height:280px"></textarea>
+        <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+          <button class="btn btn-secondary" data-action="close-import">취소</button>
+          <button class="btn btn-primary" data-action="parse-schedule-import">${icon('i-zap')} 파싱 & 반영</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderScheduleDrawer() {
+  const { program, day } = state.scheduleDrawer;
+  const key = scheduleKey(program, day);
+  const entry = state.scheduleData[key] || { corner: '', guests: [] };
+  const dates = getWeekDates(state.scheduleWeek || toISODate(getMondayOfWeek(new Date())));
+  const dayIdx = DAY_NAMES.indexOf(day);
+  const dateStr = dayIdx >= 0 ? formatDateShort(dates[dayIdx]) : '';
+
+  return `
+    <div class="drawer-backdrop" data-action="close-drawer"></div>
+    <div class="drawer" onclick="event.stopPropagation()">
+      <div class="drawer-header">
+        <div class="mono text-cyan" style="font-size:10px;letter-spacing:0.2em;margin-bottom:4px">${esc(dateStr)} · ${esc(day)}요일</div>
+        <div class="serif" style="font-size:20px;font-weight:900;color:#1a2b3d">${esc(program)}</div>
+        <button class="drawer-close" data-action="close-drawer">${icon('i-x', 16)}</button>
+      </div>
+      <div class="drawer-body">
+        <div class="field-row">
+          <div class="field-label">코너</div>
+          <input type="text" class="field-input" id="drawer-corner" value="${esc(entry.corner || '')}" placeholder="예: 마감, 복선, 하우스뷰...">
+        </div>
+
+        <div style="margin-top:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="section-title" style="margin:0">${icon('i-user')}<span class="lbl">출연자 (${(entry.guests || []).length}명)</span></div>
+            <button class="btn btn-secondary" data-action="add-guest" style="padding:4px 10px;font-size:11px">${icon('i-plus', 12)} 추가</button>
+          </div>
+          <div class="guest-list" id="drawer-guest-list">
+            ${(entry.guests || []).map((g, i) => renderGuestEntry(g, i)).join('')}
+            ${(entry.guests || []).length === 0 ? `<div class="text-mute2" style="font-size:12px;font-style:italic;text-align:center;padding:20px">아직 등록된 출연자가 없습니다</div>` : ''}
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:24px;justify-content:space-between">
+          <button class="btn btn-danger" data-action="delete-schedule-cell">${icon('i-trash', 13)} 이 셀 비우기</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" data-action="close-drawer">취소</button>
+            <button class="btn btn-primary" data-action="save-drawer">${icon('i-save')} 저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderGuestEntry(g, i) {
+  return `
+    <div class="guest-entry" data-guest-idx="${i}">
+      <button class="del-btn" data-action="remove-guest" data-idx="${i}" title="삭제">${icon('i-x', 14)}</button>
+      <input type="text" class="name g-name-${i}" placeholder="이름" value="${esc(g.name || '')}">
+      <input type="text" class="affil g-affil-${i}" placeholder="소속" value="${esc(g.affiliation || '')}">
+      <div style="display:flex;gap:6px">
+        <input type="text" class="g-title-${i}" placeholder="직함" value="${esc(g.title || '')}" style="flex:2">
+        <input type="text" class="g-mode-${i}" placeholder="출연방식 (화상/전화)" value="${esc(g.mode || '')}" style="flex:2">
+      </div>
+    </div>
+  `;
+}
+
+// -------- 스케줄 액션 핸들러 --------
+async function loadScheduleWeek(weekMonday) {
+  state.scheduleLoading = true;
+  state.scheduleWeek = weekMonday;
+  renderApp();
+  state.scheduleData = await fetchScheduleWeek(weekMonday);
+  state.scheduleLoading = false;
+  renderApp();
+}
+
+function shiftWeek(days) {
+  const cur = new Date(state.scheduleWeek || toISODate(getMondayOfWeek(new Date())));
+  cur.setDate(cur.getDate() + days);
+  loadScheduleWeek(toISODate(cur));
+}
+
+function collectDrawerGuestsFromDOM() {
+  const list = document.getElementById('drawer-guest-list');
+  if (!list) return [];
+  const entries = list.querySelectorAll('.guest-entry');
+  const guests = [];
+  entries.forEach((entry, i) => {
+    const name = list.querySelector(`.g-name-${i}`)?.value?.trim() || '';
+    if (!name) return;
+    const affil = list.querySelector(`.g-affil-${i}`)?.value?.trim() || null;
+    const title = list.querySelector(`.g-title-${i}`)?.value?.trim() || null;
+    const mode = list.querySelector(`.g-mode-${i}`)?.value?.trim() || null;
+    guests.push({ name, affiliation: affil, title, mode });
+  });
+  return guests;
+}
+
+async function saveScheduleCell() {
+  if (!state.scheduleDrawer) return;
+  const { program, day } = state.scheduleDrawer;
+  const key = scheduleKey(program, day);
+  const corner = document.getElementById('drawer-corner')?.value?.trim() || '';
+  const guests = collectDrawerGuestsFromDOM();
+
+  if (!corner && guests.length === 0) {
+    delete state.scheduleData[key];
+  } else {
+    state.scheduleData[key] = { corner, guests };
+  }
+
+  try {
+    await saveScheduleWeek(state.scheduleWeek, state.scheduleData);
+    showNotify('저장 완료');
+  } catch (e) {
+    showNotify('저장 실패: ' + e.message, true);
+  }
+  state.scheduleDrawer = null;
+  renderApp();
+}
+
+async function deleteScheduleCell() {
+  if (!state.scheduleDrawer) return;
+  const { program, day } = state.scheduleDrawer;
+  const key = scheduleKey(program, day);
+  delete state.scheduleData[key];
+  try {
+    await saveScheduleWeek(state.scheduleWeek, state.scheduleData);
+    showNotify('삭제 완료');
+  } catch (e) {
+    showNotify('삭제 실패', true);
+  }
+  state.scheduleDrawer = null;
+  renderApp();
+}
+
+async function handleParseScheduleImport() {
+  const text = document.getElementById('schedule-import-text')?.value || '';
+  if (text.trim().length < 20) {
+    showNotify('붙여넣은 텍스트가 너무 짧습니다', true);
+    return;
+  }
+  const entries = parseScheduleText(text);
+  if (entries.length === 0) {
+    showNotify('인식된 스케줄 항목이 없습니다', true);
+    return;
+  }
+
+  // 기존 스케줄에 병합
+  for (const e of entries) {
+    if (!e.day || !DAY_NAMES.includes(e.day)) continue;
+    if (!e.program) continue;
+    // 프로그램명이 우리 프로그램 리스트에 있는지 확인 (short name 도 허용)
+    let matchedProgram = e.program;
+    const prog = PROGRAMS.find(p => p.name === e.program || p.shortName === e.program);
+    if (prog) matchedProgram = prog.name;
+
+    const key = scheduleKey(matchedProgram, e.day);
+    const existing = state.scheduleData[key] || { corner: '', guests: [] };
+    const newCorner = e.corner || existing.corner;
+    // 게스트 병합 (중복 이름은 스킵)
+    const mergedGuests = [...existing.guests];
+    for (const g of e.guests) {
+      if (!mergedGuests.some(x => x.name === g.name && x.affiliation === g.affiliation)) {
+        mergedGuests.push(g);
+      }
+    }
+    state.scheduleData[key] = { corner: newCorner, guests: mergedGuests };
+  }
+
+  try {
+    await saveScheduleWeek(state.scheduleWeek, state.scheduleData);
+    showNotify(`${entries.length}개 항목 반영 완료`);
+  } catch (e) {
+    showNotify('저장 실패', true);
+  }
+
+  state.scheduleImportOpen = false;
+  renderApp();
+}
+
+// ==============================================================
 // EVENT HANDLERS
 // ==============================================================
 function attachHandlers() {
@@ -1680,6 +2517,11 @@ function attachHandlers() {
       if (v === 'upload') resetUploadState();
       state.view = v;
       renderApp();
+      // 스케줄 뷰 진입 시 이번주 데이터 로드
+      if (v === 'schedule') {
+        const week = state.scheduleWeek || toISODate(getMondayOfWeek(new Date()));
+        loadScheduleWeek(week);
+      }
     });
   });
 
@@ -1729,11 +2571,23 @@ function attachHandlers() {
         case 'back-check': state.view = 'check'; renderApp(); break;
         case 'back-archive': state.currentDetail = null; state.view = 'archive'; renderApp(); break;
         case 'goto-stock':
-          state.editedProgram = state.manuscript.parsed.program || '';
-          state.editedCorner = state.manuscript.parsed.corner || '';
+          state.currentCornerIndex = 0;
+          const firstSeg = state.manuscript.parsed.segments?.[0] || state.manuscript.parsed;
+          state.editedProgram = firstSeg.program || '';
+          state.editedCorner = firstSeg.corner || '';
           state.editedDate = new Date().toISOString().slice(0, 10);
           state.view = 'stock'; renderApp();
           break;
+        case 'select-corner': {
+          const idx = parseInt(btn.dataset.idx || '0');
+          state.currentCornerIndex = idx;
+          const segs = state.manuscript.parsed.segments || [state.manuscript.parsed];
+          const seg = segs[idx] || segs[0];
+          state.editedProgram = seg.program || '';
+          state.editedCorner = seg.corner || '';
+          renderApp();
+          break;
+        }
         case 'run-ai-check': await handleRunAICheck(); break;
         case 'run-ai-extract': await handleRunAIExtract(); break;
         case 'save-stock': handleSaveStock(); break;
@@ -1751,6 +2605,48 @@ function attachHandlers() {
         case 'request-delete': state.confirmDelete = true; renderApp(); break;
         case 'cancel-delete': state.confirmDelete = false; renderApp(); break;
         case 'confirm-delete': handleDelete(); break;
+
+        // ---- 스케줄 관련 ----
+        case 'prev-week': shiftWeek(-7); break;
+        case 'next-week': shiftWeek(7); break;
+        case 'today-week': loadScheduleWeek(toISODate(getMondayOfWeek(new Date()))); break;
+        case 'import-schedule':
+          state.scheduleImportOpen = true; renderApp(); break;
+        case 'close-import':
+          state.scheduleImportOpen = false; renderApp(); break;
+        case 'parse-schedule-import': await handleParseScheduleImport(); break;
+        case 'open-drawer':
+          state.scheduleDrawer = { program: btn.dataset.program, day: btn.dataset.day };
+          renderApp();
+          break;
+        case 'close-drawer':
+          state.scheduleDrawer = null; renderApp(); break;
+        case 'save-drawer': await saveScheduleCell(); break;
+        case 'delete-schedule-cell': await deleteScheduleCell(); break;
+        case 'add-guest': {
+          if (!state.scheduleDrawer) break;
+          const key = scheduleKey(state.scheduleDrawer.program, state.scheduleDrawer.day);
+          // DOM에서 현재 값 먼저 수집 (재렌더에서 초기화되지 않도록)
+          const existingGuests = collectDrawerGuestsFromDOM();
+          const cornerVal = document.getElementById('drawer-corner')?.value?.trim() || '';
+          state.scheduleData[key] = {
+            corner: cornerVal,
+            guests: [...existingGuests, { name: '', affiliation: '', title: '', mode: '' }]
+          };
+          renderApp();
+          break;
+        }
+        case 'remove-guest': {
+          if (!state.scheduleDrawer) break;
+          const idx = parseInt(btn.dataset.idx || '0');
+          const key = scheduleKey(state.scheduleDrawer.program, state.scheduleDrawer.day);
+          const existingGuests = collectDrawerGuestsFromDOM();
+          const cornerVal = document.getElementById('drawer-corner')?.value?.trim() || '';
+          existingGuests.splice(idx, 1);
+          state.scheduleData[key] = { corner: cornerVal, guests: existingGuests };
+          renderApp();
+          break;
+        }
       }
     });
   });
@@ -1880,37 +2776,57 @@ async function handleRunAIExtract() {
 
 async function handleSaveStock() {
   if (!state.manuscript) return;
-  const p = state.manuscript.parsed;
-  const entry = {
-    program: state.editedProgram,
-    corner: state.editedCorner || p.corner,
-    airDate: state.editedDate,
-    airTime: p.airTime,
-    duration: p.duration,
-    guest: p.guest?.name || null,
-    guestAffiliation: p.guest?.affiliation || null,
-    mc: p.mc,
-    questionCount: p.questions.length,
-    cgCount: p.stats.cgTotal,
-    charCount: p.stats.charCount,
-    tickers: state.aiExtract?.tickers || [],
-    events: state.aiExtract?.events || [],
-    sectors: state.aiExtract?.sectors || [],
-    organizations: state.aiExtract?.organizations || [],
-    raw: state.manuscript.raw,
-    parsed: p,
-    aiExtract: state.aiExtract
-  };
-  try {
-    const saved = await saveManuscript(entry);
-    showNotify(`STOCK 저장 완료 · "${entry.corner}"`);
-    // 서버에서 다시 목록 로드
+  const parsed = state.manuscript.parsed;
+  const segments = parsed.segments || [parsed];
+  const isMulti = segments.length > 1;
+
+  let savedCount = 0;
+  let failedCount = 0;
+
+  for (let i = 0; i < segments.length; i++) {
+    const p = segments[i];
+    // 현재 편집중인 코너는 사용자 입력 반영
+    const isCurrent = i === (state.currentCornerIndex || 0);
+    const entry = {
+      program: isCurrent ? state.editedProgram : (p.program || ''),
+      corner: isCurrent ? (state.editedCorner || p.corner) : (p.corner || ''),
+      airDate: state.editedDate,
+      airTime: p.airTime,
+      duration: p.duration,
+      guest: p.guest?.name || null,
+      guestAffiliation: p.guest?.affiliation || null,
+      guests: (p.guests || []).map(g => ({ name: g.name, affiliation: g.affiliation, title: g.title, career: g.career })),
+      mc: p.mc,
+      questionCount: p.questions.length,
+      cgCount: p.stats.cgTotal,
+      charCount: p.stats.charCount,
+      tickers: state.aiExtract?.tickers || [],
+      events: state.aiExtract?.events || [],
+      sectors: state.aiExtract?.sectors || [],
+      organizations: state.aiExtract?.organizations || [],
+      raw: p.rawText || state.manuscript.raw,
+      parsed: p,
+      aiExtract: state.aiExtract,
+      cornerIndex: isMulti ? i + 1 : null,
+      cornerTotal: isMulti ? segments.length : null
+    };
+    try {
+      await saveManuscript(entry);
+      savedCount++;
+    } catch (e) {
+      console.error(`코너 ${i + 1} 저장 실패`, e);
+      failedCount++;
+    }
+  }
+
+  if (savedCount > 0) {
+    showNotify(isMulti ? `${savedCount}개 코너 STOCK 저장 완료${failedCount > 0 ? ` (${failedCount}건 실패)` : ''}` : `STOCK 저장 완료`);
     state.archive = await fetchArchive();
     resetUploadState();
     state.view = 'archive';
     renderApp();
-  } catch (e) {
-    showNotify('저장 실패: ' + e.message, true);
+  } else {
+    showNotify('저장 실패', true);
   }
 }
 
