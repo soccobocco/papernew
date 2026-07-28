@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIRSCRIPT · 방송 원고 자동검수 & STOCK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@300;400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<style>
+/* ============= RESET ============= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  font-family: 'Noto Sans KR', -apple-system, sans-serif;
+  background: #050914;
+  color: #e2e8f0;
+  line-height: 1.6;
+  overflow: hidden;
+}
+
+/* ============= UTILS ============= */
+.serif { font-family: 'Noto Serif KR', serif; font-feature-settings: "palt"; }
+.mono { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+.display { font-family: 'Inter', 'Noto Sans KR', sans-serif; }
+
+.text-cyan { color: #22d3ee; }
+.text-hcyan { color: #00B4D8; }
+.text-hblue { color: #4a90d9; }
+.text-amber { color: #fbbf24; }
+.text-red { color: #f87171; }
+.text-emerald { color: #34d399; }
+.text-muted { color: #94a3b8; }
+.text-mute2 { color: #64748b; }
+
+.scroll-y { overflow-y: auto; }
+.scroll-y::-webkit-scrollbar { width: 8px; }
+.scroll-y::-webkit-scrollbar-track { background: transparent; }
+.scroll-y::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+.scroll-y::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* ============= LAYOUT ============= */
+.app { display: flex; height: 100vh; }
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: #0a1128;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+}
+.main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ============= SIDEBAR ============= */
+.brand-block {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #22d3ee;
+  margin-bottom: 8px;
+}
+.brand-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #22d3ee;
+  box-shadow: 0 0 8px #22d3ee;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.brand-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: white;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.brand-name .dot { color: #22d3ee; }
+.brand-sub { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+.nav-section { padding: 12px 0; }
+.nav-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #475569;
+  padding: 8px 20px 4px;
+  text-transform: uppercase;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  background: transparent;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+.nav-item:hover { background: rgba(255,255,255,0.03); color: white; }
+.nav-item.active {
+  color: #22d3ee;
+  border-left-color: #22d3ee;
+  background: linear-gradient(90deg, rgba(34,211,238,0.12), transparent);
+}
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+.nav-item .label { flex: 1; }
+.nav-item .badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: rgba(34,211,238,0.15);
+  color: #22d3ee;
+  border-radius: 3px;
+}
+
+.program-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 20px 5px 40px;
+  font-size: 12px;
+  color: #94a3b8;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.program-item:hover { background: rgba(255,255,255,0.03); color: white; }
+.program-item .dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.5);
+  flex-shrink: 0;
+}
+.program-item .count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: #64748b;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.6;
+}
+.sidebar-footer .settings-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  margin: -6px 0 6px;
+  border-radius: 3px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 10px;
+  font-family: inherit;
+  width: 100%;
+  text-align: left;
+}
+.sidebar-footer .settings-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+.sidebar-footer .settings-btn.has-key { color: #34d399; border-color: rgba(52,211,153,0.3); }
+
+/* ============= BUTTONS ============= */
+.btn {
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.02em;
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: #22d3ee; color: #050914; }
+.btn-primary:hover:not(:disabled) { background: #67e8f9; }
+.btn-secondary {
+  background: transparent;
+  color: #cbd5e1;
+  border-color: rgba(255,255,255,0.14);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.25); }
+.btn-danger {
+  background: rgba(239,68,68,0.1);
+  color: #f87171;
+  border-color: rgba(239,68,68,0.3);
+}
+.btn-danger:hover { background: rgba(239,68,68,0.2); }
+.btn svg { width: 14px; height: 14px; }
+.btn-lg { padding: 10px 20px; font-size: 14px; }
+
+/* ============= CARDS ============= */
+.card { background: #141e40; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 16px; }
+.paste-area {
+  background: #0d1936;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #e2e8f0;
+  transition: all 0.15s;
+  width: 100%;
+  padding: 20px 24px;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 14px;
+  line-height: 1.8;
+  border-radius: 8px;
+  resize: vertical;
+  outline: none;
+}
+.paste-area:focus {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+}
+
+/* ============= HIGHLIGHTS ============= */
+.hl-error {
+  background: rgba(239, 68, 68, 0.2);
+  border-bottom: 2px wavy #f87171;
+  padding: 1px 3px;
+  border-radius: 2px;
+  cursor: help;
+}
+.hl-warn {
+  background: rgba(251, 191, 36, 0.2);
+  border-bottom: 2px wavy #fbbf24;
+  padding: 1px 3px;
+  border-radius: 2px;
+  cursor: help;
+}
+.hl-suggest {
+  background: rgba(59, 130, 246, 0.15);
+  border-bottom: 2px dotted #3b82f6;
+  padding: 1px 3px;
+  border-radius: 2px;
+  cursor: help;
+}
+
+/* ============= CHIPS ============= */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  margin: 2px 4px 2px 0;
+  font-family: 'IBM Plex Mono', monospace;
+  border: 1px solid;
+}
+.chip.cyan { background: rgba(0,180,216,0.15); color: #22d3ee; border-color: rgba(0,180,216,0.3); }
+.chip.emerald { background: rgba(52,211,153,0.15); color: #34d399; border-color: rgba(52,211,153,0.3); }
+.chip.amber { background: rgba(251,191,36,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+.chip.purple { background: rgba(147,51,234,0.15); color: #c084fc; border-color: rgba(147,51,234,0.3); }
+.chip.blue { background: rgba(0,75,141,0.25); color: #60a5fa; border-color: rgba(0,75,141,0.5); }
+.chip.slate { background: rgba(148,163,184,0.1); color: #cbd5e1; border-color: rgba(148,163,184,0.2); }
+
+/* ============= FINDING CARDS ============= */
+.finding {
+  padding: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-left: 3px solid;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.finding.error { border-left-color: #f87171; }
+.finding.warn { border-left-color: #fbbf24; }
+.finding.suggest { border-left-color: #3b82f6; }
+.finding-type {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.finding.error .finding-type { color: #f87171; }
+.finding.warn .finding-type { color: #fbbf24; }
+.finding.suggest .finding-type { color: #3b82f6; }
+.finding-text {
+  font-size: 12px;
+  color: white;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.finding-text .strike { color: #f87171; text-decoration: line-through; font-family: 'Noto Serif KR', serif; }
+.finding-text .fix { color: #34d399; font-weight: 700; font-family: 'Noto Serif KR', serif; }
+.finding-reason { color: #94a3b8; font-size: 11px; }
+
+/* ============= HEADER BARS ============= */
+.top-bar {
+  padding: 14px 32px;
+  background: #0a1128;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.step-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: #64748b;
+  letter-spacing: 0.15em;
+}
+
+/* ============= CHECK VIEW SPLIT ============= */
+.check-split {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  flex: 1;
+  overflow: hidden;
+}
+.paper-view {
+  padding: 32px;
+  background: #faf7ef;
+  color: #1a1a2e;
+  overflow-y: auto;
+}
+.paper-content {
+  max-width: 720px;
+  margin: 0 auto;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 14px;
+  line-height: 1.85;
+}
+.paper-content .cg-line {
+  color: #64748b;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  padding: 2px 0;
+}
+.paper-content .cg-line .cg-marker { color: #00B4D8; font-weight: 700; }
+.paper-content .speaker-line { margin-top: 10px; padding: 2px 0; }
+.paper-content .speaker-line .speaker {
+  font-weight: 700;
+  color: #00B4D8;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+}
+.paper-content .header-line {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: #6b7280;
+  padding: 2px 0;
+}
+.paper-content .career-line {
+  font-size: 12px;
+  color: #6b7280;
+  padding-left: 16px;
+}
+.paper-content p, .paper-content div { margin: 0; }
+
+.findings-panel {
+  background: #0a1128;
+  border-left: 1px solid rgba(255,255,255,0.08);
+  padding: 20px;
+  overflow-y: auto;
+}
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.stat {
+  padding: 10px;
+  border-left: 2px solid;
+  border-radius: 3px;
+}
+.stat.error { background: rgba(239,68,68,0.05); border-color: #f87171; }
+.stat.warn { background: rgba(251,191,36,0.05); border-color: #fbbf24; }
+.stat.suggest { background: rgba(59,130,246,0.05); border-color: #3b82f6; }
+.stat .n {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+}
+.stat .lbl { font-size: 10px; letter-spacing: 0.05em; margin-top: 2px; }
+.stat.error .lbl { color: #f87171; }
+.stat.warn .lbl { color: #fbbf24; }
+.stat.suggest .lbl { color: #60a5fa; }
+
+/* ============= FORM FIELDS ============= */
+.field-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.field-row .field-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: #64748b;
+}
+.field-input, select.field-input {
+  background: #0d1936;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.14);
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 3px;
+  width: 100%;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.field-input:focus { outline: none; border-color: #22d3ee; }
+
+/* ============= SECTION TITLE ============= */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.section-title svg { width: 12px; height: 12px; color: #22d3ee; }
+.section-title .lbl {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #22d3ee;
+  text-transform: uppercase;
+}
+
+/* ============= STOCK VIEW GRID ============= */
+.stock-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.cg-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.cg-stat-cell {
+  padding: 8px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 3px;
+  text-align: center;
+}
+.cg-stat-cell .n {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+}
+.cg-stat-cell .lbl { color: #94a3b8; font-size: 10px; margin-top: 2px; }
+
+/* ============= ARCHIVE ============= */
+.archive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+.archive-card {
+  padding: 16px;
+  background: #141e40;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  font-size: inherit;
+}
+.archive-card:hover {
+  border-color: #22d3ee;
+  transform: translateY(-1px);
+}
+.archive-card .card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.archive-card .card-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: #64748b;
+}
+.archive-card .card-corner {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.archive-card .card-guest {
+  color: #94a3b8;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.archive-card .card-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  color: #64748b;
+  font-family: 'IBM Plex Mono', monospace;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+/* ============= MODAL ============= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal {
+  background: #0a1128;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px;
+  padding: 32px;
+  max-width: 520px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.modal h2 {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 8px;
+}
+.modal p { color: #94a3b8; font-size: 13px; margin-bottom: 16px; line-height: 1.6; }
+.modal input {
+  background: #0d1936;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.14);
+  padding: 10px 14px;
+  font-size: 13px;
+  border-radius: 4px;
+  width: 100%;
+  font-family: 'IBM Plex Mono', monospace;
+  margin-bottom: 12px;
+}
+.modal input:focus { outline: none; border-color: #22d3ee; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+
+/* ============= LOADING ============= */
+.loading-spin {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(34,211,238,0.2);
+  border-top-color: #22d3ee;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.25s ease; }
+
+/* ============= EMPTY STATE ============= */
+.empty-state {
+  padding: 80px 32px;
+  text-align: center;
+}
+.empty-state .icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  opacity: 0.3;
+  color: #64748b;
+}
+.empty-state .title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 18px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.empty-state .desc { color: #64748b; font-size: 13px; }
+
+/* ============= FILE UPLOAD ============= */
+.upload-dropzone {
+  border: 2px dashed rgba(0,180,216,0.4);
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+  background: rgba(0,180,216,0.03);
+  margin-bottom: 20px;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.upload-dropzone:hover, .upload-dropzone.dragover {
+  border-color: #22d3ee;
+  background: rgba(34,211,238,0.08);
+}
+.upload-dropzone-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 8px;
+  color: #22d3ee;
+}
+.upload-dropzone-title {
+  font-size: 14px;
+  color: white;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.upload-dropzone-sub {
+  font-size: 11px;
+  color: #64748b;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.upload-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: #64748b;
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.upload-divider::before, .upload-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+}
+
+/* ============= NOTIFICATION ============= */
+.notify {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #141e40;
+  border: 1px solid rgba(52,211,153,0.4);
+  color: #34d399;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  z-index: 200;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  animation: fadeIn 0.25s ease;
+}
+.notify.err { border-color: rgba(239,68,68,0.4); color: #f87171; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- rendered by JS -->
+</div>
+
+<!-- Icons (Lucide) as SVG symbols for reuse -->
+<svg style="display:none">
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287L12 3Z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v8h4"/><path d="M18 9h2a2 2 0 0 1 2 2v11h-4"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></symbol>
+  <symbol id="i-radio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+</svg>
+
+<script>
+// ==============================================================
+// CONSTANTS
+// ==============================================================
+const PROGRAMS = [
+  { id: 'goodmorning', name: '굿모닝 한경 글로벌마켓', shortName: '굿모닝' },
+  { id: 'moneyplus', name: '머니플러스', shortName: '머니플러스' },
+  { id: 'start1', name: '출발증시 1부', shortName: '출발1부' },
+  { id: 'start2', name: '출발증시 2부', shortName: '출발2부' },
+  { id: 'insight', name: '마켓인사이트', shortName: '마켓인사이트' },
+  { id: 'kstock', name: 'K스탁 라이브', shortName: 'K스탁' },
+  { id: 'watch', name: '마켓워치', shortName: '마켓워치' },
+  { id: 'sungtoo', name: '성공투자 오후증시', shortName: '성투' }
+];
+const KNOWN_MCS = ['김호정', '이혜수', '박현상'];
+
+const SAMPLE_TEXT = `#3 (11:27 ~11:40)
+포트폴리오 플러스 (13')
+좌상단> 포트폴리오 플러스
+우측네임> 박현상 주머니투자자문 이사
+김호정 /
+베테랑 PB들이
+보다 든든하고 안정적인 수익을 위한
+맞춤형 포트폴리오를 제시해드리는 시간입니다.
+<포트폴리오 플러스>
+박현상 주머니투자자문 이사 와 함께합니다.
+어서오세요.
+박현상 / (인사)
+김호정 / (질문0)
+코스피 어제 기세좋게 9000을 돌파하더니
+오늘도 흐름이 좋습니다.
+지금 시장 어떻게 보십니까?
+박현상 / (답변)
+서브> 코스피 9300 돌파...시장전망
+김호정 / (질문1)
+먼저, 이번 주 집중 섹터와 회피 섹터로는
+어떤 것이 있는지 화면으로 만나볼까요?
+박현상 / (답변)
+월백 통CG> 섹터 포커스
+서브(2단)> 집중 섹터 조선
+신조선가지수 9주 연속 상승
+서브(2단)> 집중 섹터 조선
+2028~2030년까지 고가·고마진 물량
+김호정 / (질문2)
+계속해서 이번 주 시장 포트폴리오 전략
+어떻게 구상해보면 좋을지 살펴보겠습니다.
+박현상 / (답변)
+서브> 지난주 포트폴리오 리뷰
+수퍼> 방산, 종전 MOU 서명에도 급등
+김호정 / (질문3)
+끝으로 다음 주 국내증시는 어떻게 대응하면 좋을까요?
+박현상 / (답변)
+서브> 다음 주 국내증시 대응 전략`;
+
+// ==============================================================
+// STATE
+// ==============================================================
+const state = {
+  view: 'upload',
+  manuscript: null,   // { raw, parsed }
+  checks: [],
+  aiChecks: null,
+  aiCheckLoading: false,
+  aiExtract: null,
+  aiExtractLoading: false,
+  archive: [],
+  currentDetail: null,
+  currentDetailData: null,
+  filterProgram: 'all',
+  searchQuery: '',
+  confirmDelete: false,
+  editedProgram: '',
+  editedCorner: '',
+  editedDate: new Date().toISOString().slice(0, 10)
+};
+
+// ==============================================================
+// STORAGE — 서버 API 호출 (/api/manuscripts)
+// ==============================================================
+async function fetchArchive() {
+  try {
+    const resp = await fetch("/api/manuscripts");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    return data.items || [];
+  } catch (e) {
+    console.error("아카이브 로드 실패", e);
+    return [];
+  }
+}
+
+async function fetchManuscript(id) {
+  try {
+    const resp = await fetch(`/api/manuscripts/${encodeURIComponent(id)}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    return data.manuscript;
+  } catch (e) {
+    console.error("원고 로드 실패", e);
+    return null;
+  }
+}
+
+async function saveManuscript(entry) {
+  const resp = await fetch("/api/manuscripts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry)
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+    throw new Error(err.error || "저장 실패");
+  }
+  return await resp.json();
+}
+
+async function deleteManuscript(id) {
+  const resp = await fetch(`/api/manuscripts/${encodeURIComponent(id)}`, {
+    method: "DELETE"
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+    throw new Error(err.error || "삭제 실패");
+  }
+  return await resp.json();
+}
+
+// ==============================================================
+// PARSER — 실제 원고 포맷 기반
+// ==============================================================
+function parseManuscript(rawText) {
+  const text = String(rawText || '').replace(/\r\n/g, '\n');
+  const lines = text.split('\n');
+
+  const result = {
+    program: null, corner: null, cornerNo: null, airTime: null, duration: null,
+    mc: null,
+    guest: { name: null, affiliation: null, title: null, career: [] },
+    questions: [],
+    cgDirectives: { title: [], guestTag: [], sub: [], super: [], bottom: [], whole: [], ppt: [] },
+    programMatch: null,
+    stats: { lines: 0, questions: 0, cgTotal: 0, charCount: text.length }
+  };
+
+  const cornerHeaderRe = /^\s*#?\s*(\d+)?\s*\(?(\d{1,2}:\d{2})\s*[~\-∼]\s*(\d{1,2}:\d{2})\)?/;
+  const durationRe = /\((\d+)\s*[′''`]\)/;
+  const arrowCornerRe = /^▶\s*(.+)$/;
+  const cornerTitleRe = /^(좌상단|좌상단S)\s*>\s*(.*)$/;
+  const guestTagRe = /^(우측네임|좌측네임|네임S)\s*>\s*(.+)$/;
+  const subRe = /^서브(?:\s*\([12]단\))?\s*>\s*(.*)$/;
+  const superRe = /^수퍼\s*>\s*(.*)$/;
+  const bottomRe = /^하단S?\s*>\s*(.*)$/;
+  const wholeRe = /^(?:월백|통CG|월백\s*통CG|월백S)\s*>\s*(.*)$/;
+  const pptRe = /^PPT\s*(\d+)\s*>\s*(.*)$/;
+  const careerRe = /^(現|前)\s+(.+)$/;
+  const speakerRe = /^([가-힣]{2,4})\s*(?:\/|>>)/;
+  const qMarkerRe = /\((질문[\d\-]+|추가질문[\d\-]+)\)/;
+  const qSungtooRe = /^(?:Q\.|\d+\.)\s*(.+)$/;
+
+  const titleSuffixes = ['수석연구위원', '연구위원', '본부장', '센터장', '이코노미스트', '대표', '이사', '팀장', '부장', '교수', '위원', '전무', '상무', '실장'];
+
+  function parseGuestInfo(guestStr) {
+    const s = guestStr.trim();
+    let title = null; let rest = s;
+    for (const suf of titleSuffixes) {
+      if (s.endsWith(suf)) { title = suf; rest = s.slice(0, -suf.length).trim(); break; }
+    }
+    const parts = rest.split(/\s+/);
+    if (parts.length === 0) return { name: s, affiliation: null, title };
+    return { name: parts[0], affiliation: parts.slice(1).join(' ') || null, title };
+  }
+
+  let questionBlock = null;
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const line = raw.trim();
+    if (!line) continue;
+
+    const chMatch = line.match(cornerHeaderRe);
+    if (chMatch && !result.airTime) {
+      if (chMatch[1]) result.cornerNo = '#' + chMatch[1];
+      result.airTime = chMatch[2] + '~' + chMatch[3];
+      const durMatch = line.match(durationRe);
+      if (durMatch) result.duration = durMatch[1];
+    }
+    const durOnlyMatch = line.match(durationRe);
+    if (durOnlyMatch && !result.duration) result.duration = durOnlyMatch[1];
+
+    const arMatch = line.match(arrowCornerRe);
+    if (arMatch && !result.corner) result.corner = arMatch[1].trim();
+
+    const ctMatch = line.match(cornerTitleRe);
+    if (ctMatch) {
+      result.cgDirectives.title.push(ctMatch[2] || '(다음 줄)');
+      if (!result.corner && ctMatch[2]) result.corner = ctMatch[2].trim();
+      else if (!result.corner && !ctMatch[2] && i + 1 < lines.length) result.corner = lines[i + 1].trim();
+    }
+    if (!result.corner && durOnlyMatch) {
+      const c = line.replace(durationRe, '').trim();
+      if (c && c.length < 20 && !/[><]/.test(c)) result.corner = c;
+    }
+
+    const gtMatch = line.match(guestTagRe);
+    if (gtMatch) {
+      const s = gtMatch[2].trim();
+      const parsed = parseGuestInfo(s);
+      if (parsed.name && !result.guest.name) {
+        result.guest.name = parsed.name;
+        result.guest.affiliation = parsed.affiliation;
+        result.guest.title = parsed.title;
+      }
+      result.cgDirectives.guestTag.push(s);
+    }
+
+    const carMatch = line.match(careerRe);
+    if (carMatch) result.guest.career.push(line);
+
+    let m;
+    if ((m = line.match(subRe))) result.cgDirectives.sub.push(m[1] || '');
+    if ((m = line.match(superRe))) result.cgDirectives.super.push(m[1] || '');
+    if ((m = line.match(bottomRe))) result.cgDirectives.bottom.push(m[1] || '');
+    if ((m = line.match(wholeRe))) result.cgDirectives.whole.push(m[1] || '');
+    if ((m = line.match(pptRe))) result.cgDirectives.ppt.push({ num: m[1], desc: m[2] || '' });
+
+    const spMatch = line.match(speakerRe);
+    if (spMatch && KNOWN_MCS.includes(spMatch[1]) && !result.mc) result.mc = spMatch[1];
+
+    const qMatch = line.match(qMarkerRe);
+    if (qMatch) { questionBlock = { marker: qMatch[1], text: '' }; continue; }
+    if (questionBlock) {
+      if (speakerRe.test(line) || /답변|인사|내용 정리/.test(line) || line.startsWith('서브') || line.startsWith('수퍼')) {
+        if (questionBlock.text.trim()) result.questions.push({ marker: questionBlock.marker, text: questionBlock.text.trim().slice(0, 200) });
+        questionBlock = null;
+      } else {
+        questionBlock.text += ' ' + line;
+      }
+    }
+
+    const qsMatch = line.match(qSungtooRe);
+    if (qsMatch && qsMatch[1].length > 10) {
+      result.questions.push({ marker: 'Q' + (result.questions.length + 1), text: qsMatch[1].slice(0, 200) });
+    }
+  }
+  if (questionBlock && questionBlock.text.trim()) {
+    result.questions.push({ marker: questionBlock.marker, text: questionBlock.text.trim().slice(0, 200) });
+  }
+
+  if (result.corner) {
+    if (/내일 전략|하우스\s*뷰|디코딩\s*마켓|전략\s*인사이드|넥스트\s*시그널|복선/.test(result.corner)) {
+      result.programMatch = 'sungtoo';
+      if (!result.program) result.program = '성공투자 오후증시';
+    }
+    if (/매크로\s*인사이트|전략적\s*투자|포트폴리오\s*플러스/.test(result.corner)) {
+      if (!result.program) {
+        if (/포트폴리오/.test(result.corner)) result.program = '출발증시 2부';
+        else result.program = '마켓인사이트';
+      }
+    }
+    if (/K.?스탁|k.?stock/i.test(result.corner)) {
+      if (!result.program) result.program = 'K스탁 라이브';
+    }
+  }
+
+  result.stats.lines = lines.filter(l => l.trim()).length;
+  result.stats.questions = result.questions.length;
+  result.stats.cgTotal = result.cgDirectives.sub.length + result.cgDirectives.super.length +
+    result.cgDirectives.bottom.length + result.cgDirectives.whole.length + result.cgDirectives.ppt.length;
+  return result;
+}
+
+// ==============================================================
+// BASIC CHECKS
+// ==============================================================
+function runBasicChecks(text) {
+  const issues = [];
+  const rules = [
+    { re: /되요/g, fix: '돼요', type: 'error', reason: '맞춤법: 되→돼' },
+    { re: /어떻해/g, fix: '어떻게 해', type: 'error', reason: '맞춤법' },
+    { re: /갯수/g, fix: '개수', type: 'error', reason: '표준어' },
+    { re: /설겆이/g, fix: '설거지', type: 'error', reason: '맞춤법' },
+    { re: /할께/g, fix: '할게', type: 'error', reason: '맞춤법' },
+    { re: /뵈요/g, fix: '봬요', type: 'error', reason: '맞춤법' },
+    { re: /며칠간/g, fix: '며칠 간', type: 'warn', reason: '띄어쓰기 검토' },
+    { re: /으로써/g, fix: '으로서', type: 'suggest', reason: '문맥 확인 (으로써: 수단 / 으로서: 자격)' },
+    { re: /  +/g, fix: ' ', type: 'warn', reason: '중복 공백' },
+    { re: /같아요\./g, fix: '같습니다.', type: 'suggest', reason: '방송 어투 · 존대 종결' },
+    { re: /(\d)억\s*원/g, fix: '$1억 원', type: 'warn', reason: '띄어쓰기 규정' },
+    { re: /삼셍전자/g, fix: '삼성전자', type: 'error', reason: '종목명 오타' }
+  ];
+  for (const rule of rules) {
+    let match;
+    const re = new RegExp(rule.re.source, rule.re.flags);
+    while ((match = re.exec(text)) !== null) {
+      if (match[0] === rule.fix) continue;
+      issues.push({
+        type: rule.type, layer: 'L1/L2',
+        offset: match.index, length: match[0].length,
+        text: match[0], suggestion: rule.fix, reason: rule.reason
+      });
+    }
+  }
+  issues.sort((a, b) => a.offset - b.offset);
+  const out = []; let lastEnd = -1;
+  for (const iss of issues) {
+    if (iss.offset >= lastEnd) { out.push(iss); lastEnd = iss.offset + iss.length; }
+  }
+  return out;
+}
+
+// ==============================================================
+// AI CHECK — 서버 프록시 호출 (/api/check)
+// ==============================================================
+async function runAICheck(text) {
+  const resp = await fetch("/api/check", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+    throw new Error(err.error || `서버 응답 오류 (${resp.status})`);
+  }
+  const data = await resp.json();
+  return data.checks || [];
+}
+
+async function runAIExtract(text) {
+  const resp = await fetch("/api/extract", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+    throw new Error(err.error || `서버 응답 오류 (${resp.status})`);
+  }
+  const data = await resp.json();
+  return data.extract;
+}
+
+// ==============================================================
+// HELPERS
+// ==============================================================
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function icon(id, size) {
+  size = size || 14;
+  return `<svg width="${size}" height="${size}"><use href="#${id}"/></svg>`;
+}
+
+function showNotify(msg, isError) {
+  const el = document.createElement('div');
+  el.className = 'notify' + (isError ? ' err' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+// ==============================================================
+// RENDERERS
+// ==============================================================
+function renderApp() {
+  const app = document.getElementById('app');
+  app.innerHTML = renderSidebar() + '<main class="main">' + renderMain() + '</main>' + renderModal();
+  attachHandlers();
+}
+
+function renderSidebar() {
+  const totalStocked = state.archive.length;
+  const programCounts = {};
+  for (const p of PROGRAMS) programCounts[p.name] = 0;
+  for (const m of state.archive) {
+    if (m.program) programCounts[m.program] = (programCounts[m.program] || 0) + 1;
+  }
+  return `
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-badge">ALPHA · v0.1</div>
+        <div class="brand-name">AIRSCRIPT<span class="dot">.</span>ai</div>
+        <div class="brand-sub">원고 자동검수 & 아카이브</div>
+      </div>
+      <div class="nav-section scroll-y" style="flex:1;min-height:0">
+        <button class="nav-item ${state.view === 'upload' ? 'active' : ''}" data-nav="upload">
+          ${icon('i-upload', 15)}<span class="label">원고 업로드</span>
+        </button>
+        <button class="nav-item ${(state.view === 'archive' || state.view === 'detail') ? 'active' : ''}" data-nav="archive">
+          ${icon('i-archive', 15)}<span class="label">아카이브</span>
+          ${totalStocked > 0 ? `<span class="badge">${totalStocked}</span>` : ''}
+        </button>
+        <button class="nav-item ${state.view === 'search' ? 'active' : ''}" data-nav="search">
+          ${icon('i-search', 15)}<span class="label">통합 검색</span>
+        </button>
+
+        <div class="nav-label">제작 1부 프로그램</div>
+        ${PROGRAMS.map(p => `
+          <button class="program-item" data-nav="archive" data-program="${esc(p.name)}">
+            <span class="dot"></span>
+            <span class="label">${esc(p.shortName)}</span>
+            ${programCounts[p.name] > 0 ? `<span class="count">${programCounts[p.name]}</span>` : ''}
+          </button>
+        `).join('')}
+      </div>
+      <div class="sidebar-footer">
+        <div class="settings-btn has-key" style="cursor:default">
+          ${icon('i-check', 12)}
+          <span>네이버 맞춤법 · 무료 검수</span>
+        </div>
+        한국경제TV / 한경글로벌TV<br>
+        제작본부 · 프로토타입
+      </div>
+    </aside>
+  `;
+}
+
+function renderMain() {
+  switch (state.view) {
+    case 'upload': return renderUpload();
+    case 'check': return renderCheck();
+    case 'stock': return renderStock();
+    case 'archive': return renderArchive();
+    case 'detail': return renderDetail();
+    case 'search': return renderSearch();
+    default: return '';
+  }
+}
+
+// ---------- UPLOAD ----------
+function renderUpload() {
+  return `
+    <div class="scroll-y" style="padding:40px 48px;max-width:900px;margin:0 auto;flex:1">
+      <div class="mono text-cyan" style="font-size:11px;letter-spacing:0.2em;margin-bottom:8px">STEP 01 · UPLOAD</div>
+      <h1 class="serif" style="font-size:32px;font-weight:900;color:white;margin-bottom:8px;letter-spacing:-0.01em">원고를 업로드하거나 붙여넣어 주세요</h1>
+      <p class="text-muted" style="font-size:14px;margin-bottom:32px;line-height:1.7">
+        DOCX 파일을 드래그하거나 파일 선택 → 자동으로 텍스트 추출됩니다.
+        HWP 파일은 아직 지원되지 않아 열어서 텍스트를 붙여넣기 해주세요.
+      </p>
+
+      <div class="upload-dropzone" id="dropzone">
+        <input type="file" id="file-input" accept=".docx,.txt,.md" style="display:none">
+        <div class="upload-dropzone-icon">${icon('i-upload', 40)}</div>
+        <div class="upload-dropzone-title">파일 드래그 또는 클릭해서 선택</div>
+        <div class="upload-dropzone-sub">DOCX · TXT (HWP는 붙여넣기 사용)</div>
+      </div>
+
+      <div class="upload-divider">또는 직접 붙여넣기</div>
+
+      <div style="position:relative">
+        <textarea class="paste-area scroll-y" id="paste-input" style="height:280px" placeholder="여기에 원고 전체를 붙여넣기 (Ctrl+V)"></textarea>
+        <div class="mono" style="position:absolute;bottom:12px;right:16px;font-size:11px;color:#64748b" id="paste-count">0 자</div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px">
+        <button class="btn btn-secondary" data-action="load-sample">
+          ${icon('i-file')} 샘플 원고 불러오기 (포트폴리오 플러스)
+        </button>
+        <button class="btn btn-primary btn-lg" data-action="submit-upload" id="submit-btn" disabled>
+          ${icon('i-zap', 16)} 자동 검수 시작
+        </button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-top:40px">
+        <div class="card fade-in">
+          <div class="mono text-cyan" style="font-size:10px;letter-spacing:0.15em;margin-bottom:6px">PARSER</div>
+          <div class="serif" style="font-size:15px;font-weight:700;color:white;margin-bottom:4px">포맷 자동 인식</div>
+          <div class="text-muted" style="font-size:12px;line-height:1.6">서브&gt; 수퍼&gt; 하단S&gt; 통CG&gt; PPT&gt; 등 CG 지시어와 게스트 프로필을 자동 분리</div>
+        </div>
+        <div class="card fade-in">
+          <div class="mono text-cyan" style="font-size:10px;letter-spacing:0.15em;margin-bottom:6px">CHECK</div>
+          <div class="serif" style="font-size:15px;font-weight:700;color:white;margin-bottom:4px">네이버 맞춤법 검사</div>
+          <div class="text-muted" style="font-size:12px;line-height:1.6">규칙 기반 즉시 + 네이버 맞춤법 검사기 (무료)</div>
+        </div>
+        <div class="card fade-in">
+          <div class="mono text-cyan" style="font-size:10px;letter-spacing:0.15em;margin-bottom:6px">STOCK</div>
+          <div class="serif" style="font-size:15px;font-weight:700;color:white;margin-bottom:4px">메타데이터 추출</div>
+          <div class="text-muted" style="font-size:12px;line-height:1.6">게스트·질문·종목·기관·이벤트·섹터를 사전 기반 자동 태깅</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ---------- CHECK ----------
+function renderCheck() {
+  const p = state.manuscript.parsed;
+  const allChecks = [...state.checks, ...(state.aiChecks || [])];
+  const errorCount = allChecks.filter(c => c.type === 'error').length;
+  const warnCount = allChecks.filter(c => c.type === 'warn').length;
+  const suggestCount = allChecks.filter(c => c.type === 'suggest').length;
+
+  return `
+    <div class="top-bar">
+      <button class="btn btn-secondary" data-action="back-upload" style="padding:6px 10px">${icon('i-left')} 처음으로</button>
+      <div class="step-label">STEP 02 · CHECK</div>
+      <div style="flex:1">
+        <div class="serif" style="font-size:16px;font-weight:700;color:white">
+          ${esc(p.corner || '원고 검수')}
+          ${p.duration ? `<span class="text-mute2" style="font-size:13px;margin-left:8px;font-weight:400">(${esc(p.duration)}′)</span>` : ''}
+        </div>
+        <div class="mono text-muted" style="font-size:11px;margin-top:2px">
+          ${p.program ? esc(p.program) + ' · ' : ''}
+          ${p.airTime ? '방송 ' + esc(p.airTime) + ' · ' : ''}
+          ${p.guest?.name ? '게스트 ' + esc(p.guest.name) : ''}
+        </div>
+      </div>
+      <button class="btn btn-secondary" data-action="run-ai-check" ${state.aiCheckLoading ? 'disabled' : ''}>
+        ${state.aiCheckLoading ? '<span class="loading-spin"></span>' : icon('i-sparkles')}
+        ${state.aiCheckLoading ? '네이버 검수 중...' : (state.aiChecks ? '재검수' : '네이버 맞춤법 검수')}
+      </button>
+      <button class="btn btn-primary" data-action="goto-stock">다음 · STOCK ${icon('i-right')}</button>
+    </div>
+
+    <div class="check-split">
+      <div class="paper-view scroll-y">
+        <div class="paper-content">
+          ${renderHighlightedText(state.manuscript.raw, allChecks)}
+        </div>
+      </div>
+      <div class="findings-panel scroll-y">
+        <div class="stat-row">
+          <div class="stat error"><div class="n">${errorCount}</div><div class="lbl">오류</div></div>
+          <div class="stat warn"><div class="n">${warnCount}</div><div class="lbl">경고</div></div>
+          <div class="stat suggest"><div class="n">${suggestCount}</div><div class="lbl">제안</div></div>
+        </div>
+        ${allChecks.length === 0 ? `
+          <div style="padding:32px;text-align:center">
+            ${icon('i-check', 32)}
+            <div class="serif" style="font-size:16px;color:white;margin:12px 0 6px">검수 통과</div>
+            <div class="text-muted" style="font-size:12px">기본 규칙에서 발견된 문제 없음.<br>AI 검수로 문맥 확인 권장.</div>
+          </div>
+        ` : allChecks.map(c => renderFinding(c)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderFinding(check) {
+  const cls = check.type;
+  const typeLabel = cls === 'error' ? '오류' : cls === 'warn' ? '경고' : '제안';
+  return `
+    <div class="finding ${cls} fade-in">
+      <div class="finding-type">${esc(check.layer || 'L1')} · ${typeLabel}</div>
+      <div class="finding-text">
+        <span class="strike">${esc(check.text)}</span>
+        ${icon('i-right', 10)}
+        <span class="fix">${esc(check.suggestion)}</span>
+      </div>
+      <div class="finding-reason">${esc(check.reason)}</div>
+    </div>
+  `;
+}
+
+function renderHighlightedText(text, checks) {
+  // Simple highlighting: replace check.text globally
+  let html = esc(text);
+  const sorted = [...checks].filter(c => c.text).sort((a, b) => (b.text?.length || 0) - (a.text?.length || 0));
+  for (const chk of sorted) {
+    if (!chk.text) continue;
+    const cls = chk.type === 'error' ? 'hl-error' : chk.type === 'warn' ? 'hl-warn' : 'hl-suggest';
+    const escText = esc(chk.text);
+    const escedForRegex = escText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(escedForRegex, 'g');
+    html = html.replace(re, `<mark class="${cls}" title="${esc(chk.reason || '')}">${escText}</mark>`);
+  }
+  // Split into lines
+  const lines = html.split('\n');
+  return lines.map(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return '<div style="height:8px"></div>';
+    // Strip mark tags for pattern testing
+    const stripped = trimmed.replace(/<[^>]+>/g, '');
+
+    // CG directive line
+    if (/^(좌상단|우측네임|좌측네임|네임S|서브|수퍼|하단S|월백|통CG|PPT)/.test(stripped)) {
+      return `<div class="cg-line">${line.replace(/^([^>]+&gt;)/, '<span class="cg-marker">$1</span>')}</div>`;
+    }
+    // Header line
+    if (/^#\d/.test(stripped) || /^\(?\d{1,2}:\d{2}/.test(stripped)) {
+      return `<div class="header-line">${line}</div>`;
+    }
+    // Career line
+    if (/^(現|前)/.test(stripped)) {
+      return `<div class="career-line">${line}</div>`;
+    }
+    // Speaker line
+    const sMatch = line.match(/^(\s*[가-힣]{2,4}\s*(?:\/|&gt;&gt;)+)(.*)$/);
+    if (sMatch && /^[가-힣]{2,4}\s*[\/>]/.test(stripped)) {
+      return `<div class="speaker-line"><span class="speaker">${sMatch[1]}</span><span>${sMatch[2]}</span></div>`;
+    }
+    return `<div style="padding:2px 0">${line}</div>`;
+  }).join('');
+}
+
+// ---------- STOCK ----------
+function renderStock() {
+  const p = state.manuscript.parsed;
+  const ex = state.aiExtract;
+  const cg = p.cgDirectives;
+
+  return `
+    <div class="scroll-y" style="padding:24px 32px;flex:1">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="btn btn-secondary" data-action="back-check" style="padding:6px 10px">${icon('i-left')} 검수로</button>
+        <div class="step-label">STEP 03 · STOCK</div>
+        <div style="flex:1">
+          <div class="serif" style="font-size:22px;font-weight:800;color:white">자동 추출된 정보 확인 & 저장</div>
+          <div class="text-muted" style="font-size:12px;margin-top:2px">잘못된 필드는 수정 가능</div>
+        </div>
+        <button class="btn btn-secondary" data-action="run-ai-extract" ${state.aiExtractLoading ? 'disabled' : ''}>
+          ${state.aiExtractLoading ? '<span class="loading-spin"></span>' : icon('i-sparkles')}
+          ${state.aiExtractLoading ? '추출 중...' : (ex ? '재추출' : '메타데이터 자동 추출')}
+        </button>
+        <button class="btn btn-primary" data-action="save-stock">${icon('i-save')} STOCK 저장</button>
+      </div>
+
+      <div class="stock-grid">
+        <div>
+          <div class="section-title">${icon('i-file')}<span class="lbl">방송 정보</span></div>
+          <div class="card" style="margin-bottom:20px">
+            <div class="field-row">
+              <div class="field-label">프로그램</div>
+              <select class="field-input" id="edit-program">
+                <option value="">(미지정)</option>
+                ${PROGRAMS.map(p2 => `<option value="${esc(p2.name)}" ${state.editedProgram === p2.name ? 'selected' : ''}>${esc(p2.name)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field-row">
+              <div class="field-label">코너명</div>
+              <input type="text" class="field-input" id="edit-corner" value="${esc(state.editedCorner)}">
+            </div>
+            <div class="field-row">
+              <div class="field-label">방송일자</div>
+              <input type="date" class="field-input mono" id="edit-date" value="${esc(state.editedDate)}" style="width:auto">
+            </div>
+            <div class="field-row">
+              <div class="field-label">방송시간</div>
+              <span class="mono" style="font-size:12px;color:#22d3ee">${esc(p.airTime || '—')} ${p.duration ? '(' + esc(p.duration) + '′)' : ''}</span>
+            </div>
+            <div class="field-row">
+              <div class="field-label">MC</div>
+              <span style="font-size:12px">${esc(p.mc || '(자동 인식 실패)')}</span>
+            </div>
+          </div>
+
+          <div class="section-title">${icon('i-user')}<span class="lbl">출연자 정보</span></div>
+          <div class="card" style="margin-bottom:20px">
+            ${p.guest?.name ? `
+              <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+                <div class="serif" style="font-size:20px;font-weight:900;color:white">${esc(p.guest.name)}</div>
+                ${p.guest.title ? `<span class="chip cyan">${esc(p.guest.title)}</span>` : ''}
+              </div>
+              ${p.guest.affiliation ? `<div class="text-muted" style="font-size:13px;margin-bottom:12px">${icon('i-building', 11)} ${esc(p.guest.affiliation)}</div>` : ''}
+              ${p.guest.career.length > 0 ? `
+                <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;margin-top:8px">
+                  <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.15em;margin-bottom:6px">CAREER</div>
+                  ${p.guest.career.map(c => `<div style="font-size:12px;color:#cbd5e1;padding:2px 0">${esc(c)}</div>`).join('')}
+                </div>
+              ` : ''}
+            ` : `<div class="text-mute2" style="font-size:12px;font-style:italic">게스트 정보 자동 인식 실패. 원고에 <span class="mono text-cyan">우측네임&gt;</span> <span class="mono text-cyan">네임S&gt;</span> 태그가 있는지 확인.</div>`}
+          </div>
+
+          <div class="section-title">${icon('i-msg')}<span class="lbl">질문 리스트 (${p.questions.length})</span></div>
+          <div class="card scroll-y" style="max-height:260px">
+            ${p.questions.length === 0 ? `<div class="text-mute2" style="font-size:12px;font-style:italic">질문 자동 인식 실패</div>` :
+              p.questions.map((q, i) => `
+                <div style="padding:8px 0;border-bottom:${i < p.questions.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none'}">
+                  <div class="mono text-cyan" style="font-size:10px;font-weight:700;margin-bottom:2px">${esc(q.marker)}</div>
+                  <div style="font-size:12px;color:#cbd5e1;line-height:1.5">${esc(q.text)}</div>
+                </div>
+              `).join('')
+            }
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">${icon('i-layers')}<span class="lbl">CG 지시 통계 (${p.stats.cgTotal})</span></div>
+          <div class="card" style="margin-bottom:20px">
+            <div class="cg-stat-grid">
+              ${renderCGStat('서브', cg.sub.length)}
+              ${renderCGStat('수퍼', cg.super.length)}
+              ${renderCGStat('하단S', cg.bottom.length)}
+              ${renderCGStat('통CG/월백', cg.whole.length)}
+              ${renderCGStat('PPT', cg.ppt.length)}
+              ${renderCGStat('네임', cg.guestTag.length)}
+            </div>
+            ${cg.sub.length > 0 ? `
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
+                <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.15em;margin-bottom:6px">서브 CG 프리뷰</div>
+                ${cg.sub.slice(0, 3).map(s => `<div style="font-size:11px;color:#cbd5e1;padding:2px 0">· ${esc(s)}</div>`).join('')}
+                ${cg.sub.length > 3 ? `<div class="text-mute2" style="font-size:10px;margin-top:4px">...외 ${cg.sub.length - 3}개</div>` : ''}
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="section-title">${icon('i-sparkles')}<span class="lbl">AI 추출 · 방송 내용</span></div>
+          <div class="card" style="margin-bottom:20px;min-height:240px">
+            ${state.aiExtractLoading ? `
+              <div style="text-align:center;padding:40px">
+                <span class="loading-spin" style="width:24px;height:24px;margin-bottom:12px"></span>
+                <div class="text-muted" style="font-size:12px">Claude가 원고를 분석 중...</div>
+              </div>
+            ` : ex ? `
+              ${ex.tickers?.length > 0 ? renderExtractRow('i-trend', '종목·기업', ex.tickers.map(t => `<span class="chip blue">${esc(t)}</span>`).join('')) : ''}
+              ${ex.organizations?.length > 0 ? renderExtractRow('i-building', '기관', ex.organizations.map(o => `<span class="chip purple">${esc(o)}</span>`).join('')) : ''}
+              ${ex.events?.length > 0 ? renderExtractRow('i-zap', '주요 이벤트', ex.events.map(e => `<span class="chip amber">${esc(e)}</span>`).join('')) : ''}
+              ${ex.sectors?.length > 0 ? renderExtractRow('i-tag', '섹터/테마', ex.sectors.map(s => `<span class="chip emerald">${esc(s)}</span>`).join('')) : ''}
+              ${ex.questionSummaries?.length > 0 ? `
+                <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08)">
+                  <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.15em;margin-bottom:8px">질문 요약 (AI)</div>
+                  ${ex.questionSummaries.map((qs, i) => `
+                    <div style="font-size:12px;color:#cbd5e1;padding:3px 0">
+                      <span class="mono text-cyan" style="margin-right:6px">Q${i+1}</span>${esc(qs)}
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+            ` : `
+              <div style="text-align:center;padding:30px">
+                ${icon('i-sparkles', 24)}
+                <div class="text-muted" style="font-size:12px;margin:12px 0">AI 추출 실행하지 않음</div>
+                <button class="btn btn-secondary" data-action="run-ai-extract">${icon('i-sparkles', 13)} 종목·이벤트·섹터 추출</button>
+              </div>
+            `}
+          </div>
+
+          <div class="section-title">${icon('i-db')}<span class="lbl">통계</span></div>
+          <div class="card">
+            <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:12px">
+              <div><div class="mono" style="font-size:18px;font-weight:700;color:white">${p.stats.charCount.toLocaleString()}</div><div class="text-muted" style="font-size:10px;margin-top:2px">글자수</div></div>
+              <div><div class="mono" style="font-size:18px;font-weight:700;color:white">${p.stats.lines}</div><div class="text-muted" style="font-size:10px;margin-top:2px">라인수</div></div>
+              <div><div class="mono" style="font-size:18px;font-weight:700;color:white">${p.stats.questions}</div><div class="text-muted" style="font-size:10px;margin-top:2px">질문수</div></div>
+              <div><div class="mono" style="font-size:18px;font-weight:700;color:white">${p.stats.cgTotal}</div><div class="text-muted" style="font-size:10px;margin-top:2px">CG총합</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function renderCGStat(label, count) {
+  const color = count > 0 ? '#22d3ee' : '#475569';
+  return `<div class="cg-stat-cell"><div class="n" style="color:${color}">${count}</div><div class="lbl">${esc(label)}</div></div>`;
+}
+function renderExtractRow(iconId, label, contentHtml) {
+  return `
+    <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        ${icon(iconId, 11)}
+        <span class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em">${esc(label)}</span>
+      </div>
+      <div>${contentHtml}</div>
+    </div>
+  `;
+}
+
+// ---------- ARCHIVE ----------
+function renderArchive() {
+  const filtered = state.filterProgram === 'all' ? state.archive : state.archive.filter(m => m.program === state.filterProgram);
+  const sorted = [...filtered].sort((a, b) => (b.stockedAt || '').localeCompare(a.stockedAt || ''));
+  return `
+    <div class="scroll-y" style="padding:32px 40px;flex:1">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+        <div style="flex:1">
+          <div class="mono text-cyan" style="font-size:11px;letter-spacing:0.2em">ARCHIVE</div>
+          <h1 class="serif" style="font-size:28px;font-weight:900;color:white;margin-top:4px">프로그램 아카이브</h1>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          ${icon('i-filter')}
+          <select class="field-input" id="filter-program" style="width:auto">
+            <option value="all" ${state.filterProgram === 'all' ? 'selected' : ''}>모든 프로그램</option>
+            ${PROGRAMS.map(p => `<option value="${esc(p.name)}" ${state.filterProgram === p.name ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      ${sorted.length === 0 ? `
+        <div class="empty-state">
+          <div class="icon">${icon('i-archive', 48)}</div>
+          <div class="title">아직 STOCK된 원고가 없습니다</div>
+          <div class="desc">[원고 업로드] 메뉴에서 첫 원고를 붙여넣어 검수 → 저장하면 여기에 표시됩니다</div>
+        </div>
+      ` : `
+        <div class="archive-grid">
+          ${sorted.map(m => renderArchiveCard(m)).join('')}
+        </div>
+      `}
+    </div>
+  `;
+}
+function renderArchiveCard(m) {
+  return `
+    <button class="archive-card fade-in" data-action="open-detail" data-id="${esc(m.id)}">
+      <div class="card-top">
+        <span class="chip cyan">${esc(m.program || '기타')}</span>
+        <span class="card-date">${esc(m.airDate || (m.stockedAt || '').slice(0, 10) || '—')}</span>
+      </div>
+      <div class="card-corner">${esc(m.corner || '(코너명 미지정)')}</div>
+      ${m.guest ? `<div class="card-guest">${icon('i-user', 10)} ${esc(m.guest)}</div>` : ''}
+      <div class="card-stats">
+        <span>질문 ${m.questionCount || 0}</span>
+        <span>CG ${m.cgCount || 0}</span>
+        <span>글자 ${(m.charCount || 0).toLocaleString()}</span>
+      </div>
+    </button>
+  `;
+}
+
+// ---------- DETAIL ----------
+function renderDetail() {
+  const m = state.currentDetailData;
+  if (!m) {
+    // 로딩 중
+    return `
+      <div class="scroll-y" style="padding:24px 32px;flex:1">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+          <button class="btn btn-secondary" data-action="back-archive" style="padding:6px 10px">${icon('i-left')} 아카이브로</button>
+        </div>
+        <div style="padding:80px;text-align:center">
+          <span class="loading-spin" style="width:24px;height:24px"></span>
+          <div class="text-muted" style="font-size:12px;margin-top:12px">원고 로드 중...</div>
+        </div>
+      </div>
+    `;
+  }
+  const p = m.parsed || {};
+  const ex = m.aiExtract;
+  const cg = p.cgDirectives || {};
+
+  return `
+    <div class="scroll-y" style="padding:24px 32px;flex:1">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+        <button class="btn btn-secondary" data-action="back-archive" style="padding:6px 10px">${icon('i-left')} 아카이브로</button>
+        <div style="flex:1"></div>
+        ${state.confirmDelete ? `
+          <span class="text-amber" style="font-size:12px">정말 삭제하시겠습니까?</span>
+          <button class="btn btn-secondary" data-action="cancel-delete" style="padding:4px 10px">취소</button>
+          <button class="btn btn-danger" data-action="confirm-delete">확인 삭제</button>
+        ` : `
+          <button class="btn btn-danger" data-action="request-delete">${icon('i-trash', 13)} 삭제</button>
+        `}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:24px">
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
+              <span class="chip cyan">${esc(m.program || '기타')}</span>
+              ${p.airTime ? `<div class="mono text-cyan" style="font-size:12px">${esc(p.airTime)}</div>` : ''}
+              ${p.duration ? `<div class="mono text-mute2" style="font-size:12px">(${esc(p.duration)}′)</div>` : ''}
+            </div>
+            <div class="serif" style="font-size:26px;font-weight:900;color:white;margin-bottom:8px">${esc(p.corner || '(코너명 미지정)')}</div>
+            <div class="text-muted" style="font-size:13px">
+              ${esc(m.airDate || '')} · MC ${esc(p.mc || '—')}
+              ${p.guest?.name ? ` · 게스트 <span style="color:white">${esc(p.guest.name)}</span> ${p.guest.affiliation ? '(' + esc(p.guest.affiliation) + ')' : ''}` : ''}
+            </div>
+          </div>
+          <div style="background:#faf7ef;padding:24px;border-radius:6px">
+            <div class="mono" style="font-size:10px;color:#6b7280;letter-spacing:0.15em;margin-bottom:12px">MANUSCRIPT</div>
+            <pre class="serif" style="white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.9;color:#1a1a2e;font-family:'Noto Serif KR',serif;margin:0">${esc(m.raw || '(원문 없음)')}</pre>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">${icon('i-user')}<span class="lbl">출연자</span></div>
+          <div class="card" style="margin-bottom:16px">
+            ${p.guest?.name ? `
+              <div class="serif" style="font-size:16px;font-weight:800;color:white">${esc(p.guest.name)}</div>
+              <div class="text-muted" style="font-size:12px;margin-top:2px">${esc(p.guest.affiliation || '')} ${p.guest.title ? '· ' + esc(p.guest.title) : ''}</div>
+              ${(p.guest.career || []).length > 0 ? `
+                <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
+                  ${p.guest.career.map(c => `<div style="font-size:11px;color:#94a3b8;padding:2px 0">${esc(c)}</div>`).join('')}
+                </div>
+              ` : ''}
+            ` : `<div class="text-mute2" style="font-size:12px;font-style:italic">미인식</div>`}
+          </div>
+
+          ${ex ? `
+            ${ex.tickers?.length > 0 ? `
+              <div class="section-title">${icon('i-trend')}<span class="lbl">종목·기업 (${ex.tickers.length})</span></div>
+              <div class="card" style="margin-bottom:16px">${ex.tickers.map(t => `<span class="chip blue">${esc(t)}</span>`).join('')}</div>
+            ` : ''}
+            ${ex.events?.length > 0 ? `
+              <div class="section-title">${icon('i-zap')}<span class="lbl">이벤트 (${ex.events.length})</span></div>
+              <div class="card" style="margin-bottom:16px">${ex.events.map(e => `<span class="chip amber">${esc(e)}</span>`).join('')}</div>
+            ` : ''}
+            ${ex.sectors?.length > 0 ? `
+              <div class="section-title">${icon('i-tag')}<span class="lbl">섹터 (${ex.sectors.length})</span></div>
+              <div class="card" style="margin-bottom:16px">${ex.sectors.map(s => `<span class="chip emerald">${esc(s)}</span>`).join('')}</div>
+            ` : ''}
+            ${ex.organizations?.length > 0 ? `
+              <div class="section-title">${icon('i-building')}<span class="lbl">기관 (${ex.organizations.length})</span></div>
+              <div class="card" style="margin-bottom:16px">${ex.organizations.map(o => `<span class="chip purple">${esc(o)}</span>`).join('')}</div>
+            ` : ''}
+          ` : ''}
+
+          <div class="section-title">${icon('i-msg')}<span class="lbl">질문 (${(p.questions || []).length})</span></div>
+          <div class="card scroll-y" style="max-height:300px">
+            ${(!p.questions || p.questions.length === 0) ? `<div class="text-mute2" style="font-size:11px;font-style:italic">없음</div>` :
+              p.questions.map(q => `
+                <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                  <div class="mono text-cyan" style="font-size:10px;margin-bottom:2px">${esc(q.marker)}</div>
+                  <div style="font-size:11px;color:#cbd5e1;line-height:1.5">${esc(q.text)}</div>
+                </div>
+              `).join('')
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ---------- SEARCH ----------
+function renderSearch() {
+  const q = state.searchQuery.trim().toLowerCase();
+  const results = !q ? [] : state.archive.filter(m => {
+    const searchable = [
+      m.program, m.corner, m.guest, m.airDate,
+      ...(m.tickers || []), ...(m.events || []), ...(m.sectors || []), ...(m.organizations || [])
+    ].filter(Boolean).join(' ').toLowerCase();
+    return searchable.includes(q);
+  });
+
+  return `
+    <div class="scroll-y" style="padding:32px 40px;flex:1">
+      <div class="mono text-cyan" style="font-size:11px;letter-spacing:0.2em;margin-bottom:4px">SEARCH</div>
+      <h1 class="serif" style="font-size:28px;font-weight:900;color:white;margin-bottom:24px">통합 검색</h1>
+      <div style="position:relative;margin-bottom:24px">
+        <div style="position:absolute;left:14px;top:14px;color:#64748b">${icon('i-search', 16)}</div>
+        <input autofocus type="text" class="paste-area" id="search-input" value="${esc(state.searchQuery)}" placeholder="게스트명 · 종목명 · 이벤트 · 섹터 · 코너명 등" style="padding:12px 12px 12px 40px;font-size:14px;height:auto;font-family:'Noto Sans KR',sans-serif">
+      </div>
+      ${q ? `<div class="text-mute2" style="font-size:12px;margin-bottom:16px">${results.length}건 검색됨</div>` : ''}
+      <div class="archive-grid">
+        ${results.map(m => renderArchiveCard(m)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ---------- MODAL ----------
+function renderModal() {
+  return '';  // 서버 프록시 사용 - 클라이언트 API 키 불필요
+}
+
+// ==============================================================
+// EVENT HANDLERS
+// ==============================================================
+function attachHandlers() {
+  // Nav
+  document.querySelectorAll('[data-nav]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.nav;
+      if (btn.dataset.program) state.filterProgram = btn.dataset.program;
+      if (v === 'archive' && !btn.dataset.program) state.filterProgram = 'all';
+      if (v === 'upload') resetUploadState();
+      state.view = v;
+      renderApp();
+    });
+  });
+
+  // Upload paste tracking
+  const pasteEl = document.getElementById('paste-input');
+  if (pasteEl) {
+    pasteEl.addEventListener('input', (e) => {
+      const c = e.target.value.length;
+      document.getElementById('paste-count').textContent = c.toLocaleString() + ' 자';
+      document.getElementById('submit-btn').disabled = c < 30;
+    });
+  }
+
+  // File upload — dropzone
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  if (dropzone && fileInput) {
+    dropzone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (f) handleFileUpload(f);
+    });
+    ['dragover', 'dragenter'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', (e) => {
+      const f = e.dataTransfer.files[0];
+      if (f) handleFileUpload(f);
+    });
+  }
+
+  // Actions
+  document.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const a = btn.dataset.action;
+      switch (a) {
+        case 'load-sample':
+          document.getElementById('paste-input').value = SAMPLE_TEXT;
+          document.getElementById('paste-count').textContent = SAMPLE_TEXT.length.toLocaleString() + ' 자';
+          document.getElementById('submit-btn').disabled = false;
+          break;
+        case 'submit-upload': handleSubmitUpload(); break;
+        case 'back-upload': state.view = 'upload'; renderApp(); break;
+        case 'back-check': state.view = 'check'; renderApp(); break;
+        case 'back-archive': state.currentDetail = null; state.view = 'archive'; renderApp(); break;
+        case 'goto-stock':
+          state.editedProgram = state.manuscript.parsed.program || '';
+          state.editedCorner = state.manuscript.parsed.corner || '';
+          state.editedDate = new Date().toISOString().slice(0, 10);
+          state.view = 'stock'; renderApp();
+          break;
+        case 'run-ai-check': await handleRunAICheck(); break;
+        case 'run-ai-extract': await handleRunAIExtract(); break;
+        case 'save-stock': handleSaveStock(); break;
+        case 'open-detail':
+          state.currentDetail = btn.dataset.id;
+          state.currentDetailData = null;
+          state.confirmDelete = false;
+          state.view = 'detail'; renderApp();
+          // 비동기 로드
+          fetchManuscript(btn.dataset.id).then(data => {
+            state.currentDetailData = data;
+            renderApp();
+          });
+          break;
+        case 'request-delete': state.confirmDelete = true; renderApp(); break;
+        case 'cancel-delete': state.confirmDelete = false; renderApp(); break;
+        case 'confirm-delete': handleDelete(); break;
+      }
+    });
+  });
+
+  // Stock edit inputs
+  const editProg = document.getElementById('edit-program');
+  if (editProg) editProg.addEventListener('change', (e) => { state.editedProgram = e.target.value; });
+  const editCorner = document.getElementById('edit-corner');
+  if (editCorner) editCorner.addEventListener('input', (e) => { state.editedCorner = e.target.value; });
+  const editDate = document.getElementById('edit-date');
+  if (editDate) editDate.addEventListener('change', (e) => { state.editedDate = e.target.value; });
+
+  // Archive filter
+  const filterEl = document.getElementById('filter-program');
+  if (filterEl) filterEl.addEventListener('change', (e) => {
+    state.filterProgram = e.target.value;
+    renderApp();
+  });
+
+  // Search
+  const searchEl = document.getElementById('search-input');
+  if (searchEl) searchEl.addEventListener('input', (e) => {
+    state.searchQuery = e.target.value;
+    // don't rerender everything, just update results panel
+    renderApp();
+    // restore focus
+    const restored = document.getElementById('search-input');
+    if (restored) { restored.focus(); restored.setSelectionRange(e.target.value.length, e.target.value.length); }
+  });
+}
+
+function resetUploadState() {
+  state.manuscript = null;
+  state.checks = [];
+  state.aiChecks = null;
+  state.aiExtract = null;
+}
+
+// ---------- FILE UPLOAD HANDLERS ----------
+async function handleFileUpload(file) {
+  const name = file.name.toLowerCase();
+  const pasteEl = document.getElementById('paste-input');
+  if (!pasteEl) return;
+
+  try {
+    let text = '';
+
+    if (name.endsWith('.docx')) {
+      showNotify('DOCX 파싱 중...');
+      const arrayBuffer = await file.arrayBuffer();
+      // mammoth.js 로 텍스트 추출
+      if (typeof mammoth === 'undefined') {
+        showNotify('DOCX 라이브러리 로드 실패 — 새로고침 후 재시도', true);
+        return;
+      }
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      text = result.value;
+      showNotify(`${file.name} 로드 완료 (${text.length.toLocaleString()}자)`);
+    } else if (name.endsWith('.txt') || name.endsWith('.md')) {
+      text = await file.text();
+      showNotify(`${file.name} 로드 완료`);
+    } else if (name.endsWith('.hwp') || name.endsWith('.hwpx')) {
+      showNotify('HWP 자동 파싱 미지원 — HWP 열어서 텍스트를 복사한 뒤 붙여넣어 주세요', true);
+      return;
+    } else {
+      showNotify('DOCX·TXT 만 지원됩니다', true);
+      return;
+    }
+
+    if (!text || text.trim().length < 20) {
+      showNotify('파일에서 텍스트를 추출하지 못했습니다', true);
+      return;
+    }
+
+    pasteEl.value = text;
+    // 문자 카운트 업데이트 & 버튼 활성화
+    document.getElementById('paste-count').textContent = text.length.toLocaleString() + ' 자';
+    document.getElementById('submit-btn').disabled = text.length < 30;
+  } catch (e) {
+    console.error(e);
+    showNotify('파일 파싱 실패: ' + e.message, true);
+  }
+}
+
+function handleSubmitUpload() {
+  const text = document.getElementById('paste-input').value;
+  if (!text || text.trim().length < 30) return;
+  const parsed = parseManuscript(text);
+  state.manuscript = { raw: text, parsed };
+  state.checks = runBasicChecks(text);
+  state.aiChecks = null;
+  state.aiExtract = null;
+  state.view = 'check';
+  renderApp();
+}
+
+async function handleRunAICheck() {
+  if (!state.manuscript) return;
+  state.aiCheckLoading = true; renderApp();
+  try {
+    const res = await runAICheck(state.manuscript.raw);
+    state.aiChecks = res || [];
+    showNotify(`AI 검수 완료 · ${res.length}건 지적`);
+  } catch (e) {
+    console.error(e);
+    showNotify('AI 검수 실패: ' + e.message, true);
+    state.aiChecks = [];
+  } finally {
+    state.aiCheckLoading = false; renderApp();
+  }
+}
+
+async function handleRunAIExtract() {
+  if (!state.manuscript) return;
+  state.aiExtractLoading = true; renderApp();
+  try {
+    const res = await runAIExtract(state.manuscript.raw);
+    state.aiExtract = res;
+    showNotify('AI 추출 완료');
+  } catch (e) {
+    console.error(e);
+    showNotify('AI 추출 실패: ' + e.message, true);
+  } finally {
+    state.aiExtractLoading = false; renderApp();
+  }
+}
+
+async function handleSaveStock() {
+  if (!state.manuscript) return;
+  const p = state.manuscript.parsed;
+  const entry = {
+    program: state.editedProgram,
+    corner: state.editedCorner || p.corner,
+    airDate: state.editedDate,
+    airTime: p.airTime,
+    duration: p.duration,
+    guest: p.guest?.name || null,
+    guestAffiliation: p.guest?.affiliation || null,
+    mc: p.mc,
+    questionCount: p.questions.length,
+    cgCount: p.stats.cgTotal,
+    charCount: p.stats.charCount,
+    tickers: state.aiExtract?.tickers || [],
+    events: state.aiExtract?.events || [],
+    sectors: state.aiExtract?.sectors || [],
+    organizations: state.aiExtract?.organizations || [],
+    raw: state.manuscript.raw,
+    parsed: p,
+    aiExtract: state.aiExtract
+  };
+  try {
+    const saved = await saveManuscript(entry);
+    showNotify(`STOCK 저장 완료 · "${entry.corner}"`);
+    // 서버에서 다시 목록 로드
+    state.archive = await fetchArchive();
+    resetUploadState();
+    state.view = 'archive';
+    renderApp();
+  } catch (e) {
+    showNotify('저장 실패: ' + e.message, true);
+  }
+}
+
+async function handleDelete() {
+  if (!state.currentDetail) return;
+  try {
+    await deleteManuscript(state.currentDetail);
+    state.archive = state.archive.filter(m => m.id !== state.currentDetail);
+    showNotify('원고 삭제됨');
+  } catch (e) {
+    showNotify('삭제 실패: ' + e.message, true);
+  }
+  state.currentDetail = null;
+  state.confirmDelete = false;
+  state.view = 'archive';
+  renderApp();
+}
+
+// ==============================================================
+// INIT
+// ==============================================================
+async function init() {
+  renderApp();
+  // 서버에서 아카이브 로드
+  try {
+    state.archive = await fetchArchive();
+    renderApp();
+  } catch (e) {
+    console.error(e);
+    showNotify('아카이브 로드 실패 - 새로고침 시도', true);
+  }
+}
+init();
+</script>
+</body>
+</html>

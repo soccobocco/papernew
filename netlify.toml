@@ -1,0 +1,10 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# API 엔드포인트는 함수 config path 로 처리 (별도 redirect 불필요)
+
+# SPA 라우팅 필요없음 (single index.html)

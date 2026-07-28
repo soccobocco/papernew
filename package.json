@@ -1,0 +1,9 @@
+{
+  "name": "airscript",
+  "version": "0.1.0",
+  "description": "AIRSCRIPT - 방송 원고 자동검수 & 아카이브",
+  "private": true,
+  "dependencies": {
+    "@netlify/blobs": "^7.4.0"
+  }
+}
