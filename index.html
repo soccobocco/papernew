@@ -740,7 +740,7 @@ body {
 }
 .schedule-header {
   background: #efe7d5;
-  padding: 12px 14px;
+  padding: 14px 14px;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
   font-weight: 700;
@@ -754,10 +754,10 @@ body {
   font-size: 10px;
   color: #7d8590;
   font-weight: 500;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 .schedule-row-label {
-  padding: 12px 14px;
+  padding: 16px 14px;
   background: #faf6ec;
   border-bottom: 1px solid rgba(30,43,61,0.06);
   border-right: 1px solid rgba(30,43,61,0.06);
@@ -768,11 +768,11 @@ body {
   align-items: center;
 }
 .schedule-cell {
-  padding: 8px 10px;
+  padding: 14px 12px;
   border-bottom: 1px solid rgba(30,43,61,0.06);
   border-right: 1px solid rgba(30,43,61,0.06);
   cursor: pointer;
-  min-height: 70px;
+  min-height: 100px;
   transition: background 0.15s;
   background: #ffffff;
 }
@@ -781,20 +781,20 @@ body {
 .schedule-cell.empty:hover { background: rgba(30,58,95,0.03); }
 .schedule-cell-corner {
   display: inline-block;
-  padding: 2px 6px;
+  padding: 3px 8px;
   background: rgba(30,58,95,0.1);
   color: #1e3a5f;
   border-radius: 3px;
   font-size: 10px;
   font-weight: 600;
   font-family: 'IBM Plex Mono', monospace;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 .schedule-cell-guest {
   font-size: 11px;
   color: #1a2b3d;
-  line-height: 1.4;
-  padding: 1px 0;
+  line-height: 1.5;
+  padding: 3px 0;
 }
 .schedule-cell-guest-affil {
   color: #7d8590;
@@ -804,7 +804,7 @@ body {
   color: #b8b0a0;
   font-size: 10px;
   text-align: center;
-  padding-top: 20px;
+  padding-top: 30px;
   font-family: 'IBM Plex Mono', monospace;
 }
 
@@ -1382,7 +1382,7 @@ async function runAICheck(text) {
     throw new Error(err.error || `서버 응답 오류 (${resp.status})`);
   }
   const data = await resp.json();
-  return data.checks || [];
+  return { checks: data.checks || [], source: data.source || "unknown", diagnostics: data.diagnostics || [] };
 }
 
 async function runAIExtract(text) {
@@ -2071,140 +2071,291 @@ function formatDateShort(d) {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-// -------- 스케줄 파서 (톡방 텍스트 → 구조화) --------
+// -------- 스케줄 파서 (다양한 톡방 포맷 지원) --------
+//
+// 지원 포맷:
+//   1) 마인:   [마켓 인사이트] 다음주 스케줄 → "포트폴리오 플러스" (텍스트 코너) → 월/ 이름 소속
+//   2) 머플:   <머니플러스 다음주 일정> → [주도주를 만드는 이슈] (브래킷 코너) → (월) → 이름
+//   3) 워치:   [마켓워치] 다음주 스케줄 → 월) 이름 소속
+//   4) K스탁:  [다음주 K스탁] → 월> → -코너명 → : 이름 or -코너명 : 이름
+//   5) 성투:   [성투 - 다음주 스케줄] → 7/27 (월) → [코너명] → 이름
+//
+// Hierarchy 자동감지: 프로그램 첫 헤더가 요일이면 'day-first',
+// 코너면 'corner-first'. 각 모드에 따라 요일/코너 변경 시 상대 필드 리셋.
+
 function parseScheduleText(text) {
   const lines = text.split('\n').map(l => l.trim());
-  const entries = [];  // { program, day, corner, guests: [{name,affiliation,title,mode}] }
+  const entries = [];   // { program, day, corner, guest }
+  const unmatched = []; // 파싱 실패 항목
+
+  const DAY_NAMES = ['월', '화', '수', '목', '금'];
 
   let currentProgram = null;
-  let currentDay = null;
-  let currentDate = null;
   let currentCorner = null;
-  let currentCategory = null;
+  let currentDay = null;
+  let hierarchyMode = null;  // 'day-first' | 'corner-first' | null
 
-  // 프로그램 헤더 패턴들
-  const programHeaderRe1 = /^\[([^\]]+?)(?:\s*-\s*(?:다음주|이번주|주간)?\s*스케줄)?\]$/;   // [성공투자 오후증시 - 다음주 스케줄]
-  const programHeaderRe2 = /^<([^>]+?)>\s*(\d{4}[-–]\d{4})?\s*(?:스케줄)?$/;    // <굿모닝> 0727-0731 스케줄
-  // 날짜 헤더: 7/27 (월)
-  const dateHeaderRe = /^(\d{1,2})\/(\d{1,2})\s*\(([월화수목금토일])\)$/;
-  // 코너 헤더: [마감] [복선]  — 프로그램 헤더와 구분 필요 (짧고 "스케줄" 없어야)
-  const cornerHeaderRe = /^\[([^\]]{2,15})\]$/;
-  // 카테고리 헤더: 특파원) 섭외)
-  const categoryRe = /^(특파원|섭외|MC|앵커|게스트|리포터|출연자)\s*[):：]?\s*$/;
-  // Format 2 개별 라인: 화 / 김종학 뉴욕
-  const format2EntryRe = /^([월화수목금토일])\s*\/\s*(.+)$/;
+  // 프로그램 헤더 패턴 (스케줄/일정/편성 키워드 필수 아님, 하지만 있으면 확실)
+  const progHeaderRegexes = [
+    /^\[다음주\s+([^\]]+)\]$/,                                    // [다음주 K스탁]
+    /^\[([^\]]+?)\]\s*(?:다음주|이번주|주간|주간)?\s*(?:스케줄|일정|편성)/,   // [마켓 인사이트] 다음주 스케줄
+    /^\[([^\]]+?)\s*[-–]\s*(?:다음주|이번주|주간)?\s*(?:스케줄|일정|편성)\]/, // [성투 - 다음주 스케줄]
+    /^<([^>]+?)>\s*(?:\d{4}[-–]\d{4})?\s*(?:다음주|이번주|주간)?\s*(?:스케줄|일정|편성)?/, // <굿모닝 0727-0731 스케줄>
+    /^<([^>]+?)\s+(?:다음주|이번주|주간)?\s*(?:스케줄|일정|편성)>/,   // <머니플러스 다음주 일정>
+  ];
 
-  const titleSuffixes = ['수석연구위원', '연구위원', '본부장', '센터장', '이코노미스트', '대표', '이사', '팀장', '부장', '교수', '위원', '전무', '상무', '실장', '차장', '과장', '소장', '지점장', '연구원', '기자', '앵커', 'PB', '뉴욕', '워싱턴', '실리콘밸리', '베이징', '도쿄', '런던', '파리', '홍콩'];
+  // 날짜 헤더
+  const dateWithDayRe = /^(\d{1,2})\/(\d{1,2})\s*\(([월화수목금토일])\)$/;   // 7/27 (월)
+  const parenDayRe = /^\(([월화수목금토일])\)$/;                              // (월)
+  const closeParenDayRe = /^([월화수목금토일])\)$/;                            // 월)
+  const arrowDayRe = /^([월화수목금토일])>$/;                                  // 월>
+  const dayWordRe = /^([월화수목금토일])요일$/;                                // 월요일
 
-  function parseGuestLine(s) {
-    let raw = s.trim();
-    // 뒤에 (화상), (전화) 등 출연방식 추출
-    const modeMatch = raw.match(/\(([^)]+)\)$/);
-    let mode = null;
-    if (modeMatch) {
-      mode = modeMatch[1];
-      raw = raw.slice(0, modeMatch.index).trim();
-    }
-    let title = null; let rest = raw;
-    for (const suf of titleSuffixes) {
-      if (raw.endsWith(suf)) { title = suf; rest = raw.slice(0, -suf.length).trim(); break; }
-    }
-    const parts = rest.split(/\s+/);
-    if (parts.length === 0) return { name: raw, affiliation: null, title, mode };
-    return { name: parts[0], affiliation: parts.slice(1).join(' ') || null, title, mode };
+  // 코너 헤더
+  const bracketCornerRe = /^\[([^\]]{2,25})\]$/;
+  const arrowCornerRe = /^▶\s*(.+)$/;
+  const hyphenCornerColonGuestRe = /^-\s*(.+?)\s*:\s*(.+)$/;   // -리포트 비하인드 : 이해니
+  const hyphenCornerOnlyRe = /^-\s*(.+)$/;                       // -증시 숏담화
+
+  // 요일 접두 게스트
+  const dayGuestSlashRe = /^([월화수목금토일])\s*\/\s*(.+)$/;    // 월/ 이름 or 월 / 이름
+  const dayGuestParenRe = /^([월화수목금토일])\s*\)\s*(.+)$/;    // 월) 이름
+  const colonGuestRe = /^[:：]\s*(.+)$/;                          // : 이름
+
+  const titleSuffixes = ['수석연구위원', '연구위원', '부센터장', '부부장', '본부장', '센터장', '이코노미스트', '리서치센터장', '리서치센터', 'PB팀장', 'ETF팀 부장', '포트폴리오 매니저', '대표', '이사', '팀장', '부장', '교수', '위원', '전무', '상무', '실장', '차장', '과장', '소장', '지점장', '연구원', '기자', '앵커', 'PB', '매니저', '뉴욕', '워싱턴', '실리콘밸리', '베이징', '도쿄', '런던', '파리', '홍콩'];
+  titleSuffixes.sort((a, b) => b.length - a.length);  // 긴 것부터 매칭
+
+  // 소속에 자주 등장하는 키워드 - 게스트 라인 판별용
+  // "투자" 단독은 제외 (예: "전략적 투자" 는 코너명). 대신 "자문", "증권" 등 명확한 소속 표지만 사용.
+  const AFFIL_KEYWORDS = [
+    '증권', '자문', '자산운용', '은행', '보험', '리서치', '연구소', '연구원', '컨설팅',
+    '금융', '캐피탈', '뱅크', '컴퍼니', '인베스트먼트', '펀드', '자문단', '경제연구',
+    'KB', 'LS', 'NH', 'SK', 'DS', 'iM', 'IBK', 'BNK', 'JB', 'DGB', 'MG',
+    '삼성', '한화', '미래에셋', '메리츠', '한국투자', '신한', '하나', '우리', '농협', '기업은행',
+    'Prestige', '와이즈', '유안타', '유진', '유경', '유니스토리', '타임폴리오', '레그넘', '위즈웨이브',
+    '이코노미스트', 'AMC', 'GFM', '홀딩스', '전문가', '경영전략', '벤투스', '그레너리', '현명',
+    '엠디', '주머니', '다이와', '체슬리', '렉스셰어즈', '위즈', '퍼스트프라임', '한국경제', '모멘텀트리'
+  ];
+  function hasAffilKeyword(text) {
+    if (!text) return false;
+    return AFFIL_KEYWORDS.some(k => text.includes(k));
   }
 
-  function pushEntry(program, day, corner, guest) {
-    if (!program || !day || !guest?.name) return;
-    let entry = entries.find(e => e.program === program && e.day === day && e.corner === corner);
-    if (!entry) {
-      entry = { program, day, corner, guests: [], date: currentDate };
-      entries.push(entry);
-    }
-    // 중복 방지
-    const dup = entry.guests.some(g => g.name === guest.name && g.affiliation === guest.affiliation);
-    if (!dup) entry.guests.push(guest);
-  }
-
-  // 프로그램명 정규화
   function normalizeProgramName(raw) {
     if (!raw) return null;
     const r = raw.trim();
-    if (/성공투자|성투/.test(r)) return '성공투자 오후증시';
-    if (/굿모닝|글로벌\s*마켓/.test(r)) return '굿모닝 한경 글로벌마켓';
-    if (/머니플러스/.test(r)) return '머니플러스';
-    if (/출발증시\s*1/.test(r)) return '출발증시 1부';
-    if (/출발증시\s*2|포트폴리오\s*플러스/.test(r)) return '출발증시 2부';
-    if (/마켓인사이트/.test(r)) return '마켓인사이트';
-    if (/K.?스탁/.test(r)) return 'K스탁 라이브';
-    if (/마켓워치/.test(r)) return '마켓워치';
-    return r;
+    if (/성공투자|성투|오후증시/.test(r)) return '성공투자 오후증시';
+    if (/굿모닝|글로벌\s*마켓|한경\s*글로벌/.test(r)) return '굿모닝 한경 글로벌마켓';
+    if (/머니플러스|머플/.test(r)) return '머니플러스';
+    if (/출발증시\s*1|출발\s*1/.test(r)) return '출발증시 1부';
+    if (/출발증시\s*2|출발\s*2/.test(r)) return '출발증시 2부';
+    if (/마켓\s*인사이트|마인/.test(r)) return '마켓인사이트';
+    if (/K\s*[-·]?\s*스탁|k[-·]?stock|케이스탁/i.test(r)) return 'K스탁 라이브';
+    if (/마켓\s*워치/.test(r)) return '마켓워치';
+    return null;
   }
 
-  for (const line of lines) {
+  function looksLikeKoreanName(first) {
+    return /^[가-힣]{2,4}$/.test(first);
+  }
+
+  function parseGuestInfo(str) {
+    let s = (str || '').trim();
+    if (!s) return null;
+
+    // 뒤에 (분야) or (화상) 등 소괄호 하나 이상 제거
+    let mode = null;
+    let spec = null;
+    let brackets = [];
+    let m;
+    while ((m = s.match(/\(([^)]+)\)$/))) {
+      brackets.push(m[1]);
+      s = s.slice(0, m.index).trim();
+    }
+    if (brackets.length > 0) {
+      // 첫 번째 발견: mode 로 간주 (화상, 전화 등 짧은 것)
+      // 두 번째: 분야
+      for (const b of brackets.reverse()) {
+        if (/화상|전화|스튜디오|현장|전화연결/.test(b) && !mode) mode = b;
+        else if (!spec) spec = b;
+      }
+    }
+
+    // 직함 접미어
+    let title = null;
+    let rest = s;
+    for (const suf of titleSuffixes) {
+      if (rest.endsWith(suf)) { title = suf; rest = rest.slice(0, -suf.length).trim(); break; }
+    }
+
+    const parts = rest.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return null;
+    const name = parts[0];
+    if (!looksLikeKoreanName(name)) return null;
+    return {
+      name,
+      affiliation: parts.slice(1).join(' ') || null,
+      title,
+      mode,
+      spec
+    };
+  }
+
+  function setProgram(name) {
+    const normalized = normalizeProgramName(name);
+    currentProgram = normalized || name.trim();
+    currentCorner = null;
+    currentDay = null;
+    hierarchyMode = null;
+  }
+
+  function setDay(day) {
+    if (hierarchyMode === null) hierarchyMode = 'day-first';
+    if (hierarchyMode === 'day-first') currentCorner = null;  // day 변경 → corner 리셋
+    currentDay = day;
+  }
+
+  function setCorner(name) {
+    if (hierarchyMode === null) hierarchyMode = 'corner-first';
+    if (hierarchyMode === 'corner-first') currentDay = null;  // corner 변경 → day 리셋
+    currentCorner = name;
+  }
+
+  function addEntry(guest) {
+    if (!currentProgram || !guest?.name) {
+      unmatched.push({ line: guest?.name || '?', program: currentProgram });
+      return;
+    }
+    if (!currentDay) {
+      // 요일 미지정 - 코너 아래 요일 없이 게스트 나온 경우 (예: 머플의 [송재호의 골든픽])
+      // → 월~금 모두 저장
+      for (const d of DAY_NAMES) {
+        entries.push({ program: currentProgram, day: d, corner: currentCorner || '', guest });
+      }
+      return;
+    }
+    if (!DAY_NAMES.includes(currentDay)) {
+      unmatched.push({ line: guest.name, program: currentProgram, day: currentDay });
+      return;
+    }
+    entries.push({ program: currentProgram, day: currentDay, corner: currentCorner || '', guest });
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     if (!line) continue;
 
-    // 프로그램 헤더 우선 체크 (스케줄 키워드 포함)
-    if (/스케줄/.test(line)) {
-      let m = line.match(programHeaderRe1);
+    // (1) 프로그램 헤더
+    let programSet = false;
+    for (const re of progHeaderRegexes) {
+      const m = line.match(re);
       if (m) {
-        currentProgram = normalizeProgramName(m[1]);
-        currentDay = null; currentCorner = null; currentCategory = null;
-        continue;
-      }
-      m = line.match(programHeaderRe2);
-      if (m) {
-        currentProgram = normalizeProgramName(m[1]);
-        currentDay = null; currentCorner = null; currentCategory = null;
-        continue;
+        // 코너 브래킷과의 혼동 방지: 스케줄/일정/편성 키워드가 라인 안에 있거나
+        // 프로그램명 정규화가 되는 경우만 프로그램으로 인식
+        const rawName = m[1];
+        const hasKeyword = /스케줄|일정|편성|다음주|이번주/.test(line);
+        const normalized = normalizeProgramName(rawName);
+        if (hasKeyword || normalized) {
+          setProgram(rawName);
+          programSet = true;
+          break;
+        }
       }
     }
+    if (programSet) continue;
 
-    // 날짜 헤더
-    let m = line.match(dateHeaderRe);
-    if (m) {
-      currentDate = `${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
-      currentDay = m[3];
-      currentCorner = null;
+    // (2) 날짜/요일 헤더 (여러 패턴)
+    let daySet = false;
+    let dm;
+    if ((dm = line.match(dateWithDayRe))) { setDay(dm[3]); daySet = true; }
+    else if ((dm = line.match(parenDayRe))) { setDay(dm[1]); daySet = true; }
+    else if ((dm = line.match(arrowDayRe))) { setDay(dm[1]); daySet = true; }
+    else if ((dm = line.match(dayWordRe))) { setDay(dm[1]); daySet = true; }
+    // 주의: closeParenDayRe (월)) 는 game with 게스트 포함될 수 있으므로 별도 처리 (아래)
+    if (daySet) continue;
+
+    // (3) 요일 접두 게스트 (한 줄에 요일 + 게스트)
+    let dgm;
+    if ((dgm = line.match(dayGuestSlashRe))) {   // 월/ 이름 소속
+      setDay(dgm[1]);
+      const guest = parseGuestInfo(dgm[2]);
+      if (guest) { addEntry(guest); continue; }
+      continue;
+    }
+    if ((dgm = line.match(dayGuestParenRe))) {   // 월) 이름 소속
+      setDay(dgm[1]);
+      const guest = parseGuestInfo(dgm[2]);
+      if (guest) { addEntry(guest); continue; }
+      continue;
+    }
+    // closeParenDayRe: 단독 월) — 요일만
+    if ((dm = line.match(closeParenDayRe))) { setDay(dm[1]); continue; }
+
+    // (4) K스탁 스타일: -코너 : 게스트 (한 줄에 코너+게스트)
+    let hcgm;
+    if ((hcgm = line.match(hyphenCornerColonGuestRe))) {
+      setCorner(hcgm[1].trim());
+      const guest = parseGuestInfo(hcgm[2]);
+      if (guest) { addEntry(guest); continue; }
       continue;
     }
 
-    // 카테고리 (특파원, 섭외)
-    m = line.match(categoryRe);
-    if (m) {
-      currentCategory = m[1];
+    // (5) 콜론 접두 게스트: (: 이름)
+    let cgm;
+    if ((cgm = line.match(colonGuestRe))) {
+      const guest = parseGuestInfo(cgm[1]);
+      if (guest) { addEntry(guest); continue; }
+    }
+
+    // (6) 하이픈 코너 (- 코너명) - 무조건 코너로 처리
+    let hcm;
+    if ((hcm = line.match(hyphenCornerOnlyRe))) {
+      setCorner(hcm[1].trim());
       continue;
     }
 
-    // Format 2: 요일 / 이름 소속
-    m = line.match(format2EntryRe);
-    if (m) {
-      const day = m[1];
-      const guest = parseGuestLine(m[2]);
-      pushEntry(currentProgram, day, currentCategory, guest);
-      continue;
-    }
-
-    // 코너 헤더 [코너명]
-    m = line.match(cornerHeaderRe);
-    if (m) {
-      const c = m[1].trim();
-      if (!/^(답변|인사|질문\d*|정리|내용|CG)$/.test(c) && !/스케줄/.test(c)) {
-        currentCorner = c;
+    // (7) 브래킷 코너 [코너명]
+    let bcm;
+    if ((bcm = line.match(bracketCornerRe))) {
+      const cornerName = bcm[1].trim();
+      if (!/스케줄|일정|편성/.test(cornerName) && !/^(답변|인사|질문\d*|정리|내용|CG)$/.test(cornerName)) {
+        setCorner(cornerName);
         continue;
       }
     }
 
-    // 일반 게스트 라인
-    if (currentProgram && currentDay) {
-      const guest = parseGuestLine(line);
-      if (guest.name && guest.name.length >= 2 && guest.name.length <= 4) {
-        pushEntry(currentProgram, currentDay, currentCorner, guest);
-      }
+    // (8) 화살표 코너 (▶ 코너명)
+    let acm;
+    if ((acm = line.match(arrowCornerRe))) {
+      setCorner(acm[1].trim());
+      continue;
     }
+
+    // (9) 소속 키워드 있는 라인 → 확실한 게스트
+    if (hasAffilKeyword(line)) {
+      const guest = parseGuestInfo(line);
+      if (guest) { addEntry(guest); continue; }
+    }
+
+    // (10) 프로그램 컨텍스트에서 짧고 소속 키워드 없는 라인 → 코너 후보
+    // (예: "매크로 인사이트", "전략적 투자")
+    if (currentProgram && line.length <= 25 && line.length >= 2 && !hasAffilKeyword(line)) {
+      setCorner(line);
+      continue;
+    }
+
+    // (11) 마지막 시도: 이름만 있는 라인 (소속 없는 게스트)
+    const guest = parseGuestInfo(line);
+    if (guest) {
+      addEntry(guest);
+      continue;
+    }
+
+    // 그 외 - unmatched
+    unmatched.push({ line, program: currentProgram, day: currentDay, corner: currentCorner });
   }
 
-  return entries;
+  return { entries, unmatched };
 }
 
 // -------- 스케줄 스토리지 API --------
@@ -2213,7 +2364,19 @@ async function fetchScheduleWeek(weekMonday) {
     const resp = await fetch(`/api/schedule/${encodeURIComponent(weekMonday)}`);
     if (!resp.ok) return {};
     const data = await resp.json();
-    return data.entries || {};
+    // 구 포맷 → 신 포맷 마이그레이션
+    const entries = data.entries || {};
+    for (const key in entries) {
+      const v = entries[key];
+      if (v && v.corner !== undefined && v.corners === undefined) {
+        entries[key] = {
+          corners: [{ name: v.corner || '', guests: v.guests || [] }]
+        };
+      } else if (v && !v.corners) {
+        entries[key] = { corners: [] };
+      }
+    }
+    return entries;
   } catch (e) {
     console.error('스케줄 로드 실패', e);
     return {};
@@ -2240,7 +2403,7 @@ function renderSchedule() {
   const dates = getWeekDates(week);
 
   return `
-    <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+    <div style="flex:1;overflow-y:auto;min-height:0;padding-bottom:40px">
       <div class="schedule-toolbar">
         <div class="schedule-week-nav">
           <button class="btn btn-secondary" data-action="prev-week" style="padding:6px 10px" title="이전 주">${icon('i-left')}</button>
@@ -2250,7 +2413,7 @@ function renderSchedule() {
         <button class="btn btn-secondary" data-action="today-week">이번 주로</button>
         <div style="flex:1"></div>
         ${state.scheduleLoading ? '<span class="loading-spin"></span>' : ''}
-        <button class="btn btn-primary" data-action="import-schedule">${icon('i-plus', 13)} 톡방 텍스트 붙여넣기</button>
+        <button class="btn btn-primary" data-action="import-schedule">${icon('i-plus', 13)} 편성 내용 추가하기</button>
       </div>
 
       <div class="schedule-grid">
@@ -2284,22 +2447,29 @@ function renderSchedule() {
 }
 
 function renderScheduleCell(program, day, entry) {
-  const hasData = entry && (entry.corner || (entry.guests && entry.guests.length > 0));
+  const corners = entry?.corners || [];
+  const hasData = corners.some(c => c.name || (c.guests && c.guests.length > 0));
+
   if (!hasData) {
     return `<div class="schedule-cell empty" data-action="open-drawer" data-program="${esc(program)}" data-day="${day}">
       <div class="schedule-cell-empty-hint">+ 편성</div>
     </div>`;
   }
+
   return `
     <div class="schedule-cell" data-action="open-drawer" data-program="${esc(program)}" data-day="${day}">
-      ${entry.corner ? `<div class="schedule-cell-corner">${esc(entry.corner)}</div>` : ''}
-      ${(entry.guests || []).slice(0, 3).map(g => `
-        <div class="schedule-cell-guest">
-          <strong>${esc(g.name)}</strong>
-          ${g.affiliation ? `<span class="schedule-cell-guest-affil"> · ${esc(g.affiliation.length > 15 ? g.affiliation.slice(0, 14) + '…' : g.affiliation)}</span>` : ''}
+      ${corners.map(corner => `
+        <div style="margin-bottom:10px">
+          ${corner.name ? `<div class="schedule-cell-corner">${esc(corner.name)}</div>` : ''}
+          ${(corner.guests || []).slice(0, 3).map(g => `
+            <div class="schedule-cell-guest">
+              <strong>${esc(g.name || '')}</strong>
+              ${g.affiliation ? `<span class="schedule-cell-guest-affil"> · ${esc(g.affiliation.length > 18 ? g.affiliation.slice(0, 17) + '…' : g.affiliation)}</span>` : ''}
+            </div>
+          `).join('')}
+          ${corner.guests?.length > 3 ? `<div class="schedule-cell-guest-affil">외 ${corner.guests.length - 3}명</div>` : ''}
         </div>
       `).join('')}
-      ${entry.guests?.length > 3 ? `<div class="schedule-cell-guest-affil">외 ${entry.guests.length - 3}명</div>` : ''}
     </div>
   `;
 }
@@ -2310,7 +2480,7 @@ function renderScheduleImport() {
     <div class="drawer" onclick="event.stopPropagation()">
       <div class="drawer-header">
         <div class="mono text-cyan" style="font-size:10px;letter-spacing:0.2em;margin-bottom:4px">TOKROOM PASTE</div>
-        <div class="serif" style="font-size:20px;font-weight:900;color:#1a2b3d">톡방 스케줄 붙여넣기</div>
+        <div class="serif" style="font-size:20px;font-weight:900;color:#1a2b3d">편성 내용 추가하기</div>
         <button class="drawer-close" data-action="close-import">${icon('i-x', 16)}</button>
       </div>
       <div class="drawer-body">
@@ -2333,7 +2503,8 @@ function renderScheduleImport() {
 function renderScheduleDrawer() {
   const { program, day } = state.scheduleDrawer;
   const key = scheduleKey(program, day);
-  const entry = state.scheduleData[key] || { corner: '', guests: [] };
+  const entry = state.scheduleData[key] || { corners: [] };
+  const corners = entry.corners.length > 0 ? entry.corners : [{ name: '', guests: [] }];
   const dates = getWeekDates(state.scheduleWeek || toISODate(getMondayOfWeek(new Date())));
   const dayIdx = DAY_NAMES.indexOf(day);
   const dateStr = dayIdx >= 0 ? formatDateShort(dates[dayIdx]) : '';
@@ -2347,21 +2518,13 @@ function renderScheduleDrawer() {
         <button class="drawer-close" data-action="close-drawer">${icon('i-x', 16)}</button>
       </div>
       <div class="drawer-body">
-        <div class="field-row">
-          <div class="field-label">코너</div>
-          <input type="text" class="field-input" id="drawer-corner" value="${esc(entry.corner || '')}" placeholder="예: 마감, 복선, 하우스뷰...">
+        <div id="drawer-corners">
+          ${corners.map((c, ci) => renderCornerBlock(c, ci)).join('')}
         </div>
 
-        <div style="margin-top:20px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div class="section-title" style="margin:0">${icon('i-user')}<span class="lbl">출연자 (${(entry.guests || []).length}명)</span></div>
-            <button class="btn btn-secondary" data-action="add-guest" style="padding:4px 10px;font-size:11px">${icon('i-plus', 12)} 추가</button>
-          </div>
-          <div class="guest-list" id="drawer-guest-list">
-            ${(entry.guests || []).map((g, i) => renderGuestEntry(g, i)).join('')}
-            ${(entry.guests || []).length === 0 ? `<div class="text-mute2" style="font-size:12px;font-style:italic;text-align:center;padding:20px">아직 등록된 출연자가 없습니다</div>` : ''}
-          </div>
-        </div>
+        <button class="btn btn-secondary" data-action="add-corner" style="width:100%;margin-top:12px;justify-content:center;padding:10px">
+          ${icon('i-plus', 13)} 코너 추가
+        </button>
 
         <div style="display:flex;gap:8px;margin-top:24px;justify-content:space-between">
           <button class="btn btn-danger" data-action="delete-schedule-cell">${icon('i-trash', 13)} 이 셀 비우기</button>
@@ -2375,15 +2538,35 @@ function renderScheduleDrawer() {
   `;
 }
 
-function renderGuestEntry(g, i) {
+function renderCornerBlock(corner, ci) {
   return `
-    <div class="guest-entry" data-guest-idx="${i}">
-      <button class="del-btn" data-action="remove-guest" data-idx="${i}" title="삭제">${icon('i-x', 14)}</button>
-      <input type="text" class="name g-name-${i}" placeholder="이름" value="${esc(g.name || '')}">
-      <input type="text" class="affil g-affil-${i}" placeholder="소속" value="${esc(g.affiliation || '')}">
+    <div class="corner-block" data-corner-idx="${ci}" style="background:#faf6ec;border:1px solid rgba(30,43,61,0.08);border-radius:6px;padding:14px;margin-bottom:12px;position:relative">
+      <button data-action="remove-corner" data-idx="${ci}" style="position:absolute;top:8px;right:10px;background:transparent;border:none;color:#b91c1c;cursor:pointer;opacity:0.5;padding:4px">${icon('i-x', 14)}</button>
+      <div style="margin-bottom:10px">
+        <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em;margin-bottom:4px">코너명</div>
+        <input type="text" class="field-input corner-name-${ci}" value="${esc(corner.name || '')}" placeholder="예: 마감 · 복선 · 하우스뷰...">
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em">출연자 (${(corner.guests || []).length}명)</div>
+        <button class="btn btn-secondary" data-action="add-guest" data-corner-idx="${ci}" style="padding:2px 8px;font-size:10px">${icon('i-plus', 10)} 게스트</button>
+      </div>
+      <div class="guest-list" data-corner-idx="${ci}">
+        ${(corner.guests || []).map((g, gi) => renderGuestEntry(g, ci, gi)).join('')}
+        ${(corner.guests || []).length === 0 ? `<div class="text-mute2" style="font-size:11px;font-style:italic;text-align:center;padding:12px">아직 없음</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderGuestEntry(g, ci, gi) {
+  return `
+    <div class="guest-entry" data-corner-idx="${ci}" data-guest-idx="${gi}">
+      <button class="del-btn" data-action="remove-guest" data-corner-idx="${ci}" data-idx="${gi}" title="삭제">${icon('i-x', 12)}</button>
+      <input type="text" class="name g-name-${ci}-${gi}" placeholder="이름" value="${esc(g.name || '')}">
+      <input type="text" class="affil g-affil-${ci}-${gi}" placeholder="소속" value="${esc(g.affiliation || '')}">
       <div style="display:flex;gap:6px">
-        <input type="text" class="g-title-${i}" placeholder="직함" value="${esc(g.title || '')}" style="flex:2">
-        <input type="text" class="g-mode-${i}" placeholder="출연방식 (화상/전화)" value="${esc(g.mode || '')}" style="flex:2">
+        <input type="text" class="g-title-${ci}-${gi}" placeholder="직함" value="${esc(g.title || '')}" style="flex:2">
+        <input type="text" class="g-mode-${ci}-${gi}" placeholder="출연방식" value="${esc(g.mode || '')}" style="flex:2">
       </div>
     </div>
   `;
@@ -2405,33 +2588,45 @@ function shiftWeek(days) {
   loadScheduleWeek(toISODate(cur));
 }
 
-function collectDrawerGuestsFromDOM() {
-  const list = document.getElementById('drawer-guest-list');
-  if (!list) return [];
-  const entries = list.querySelectorAll('.guest-entry');
-  const guests = [];
-  entries.forEach((entry, i) => {
-    const name = list.querySelector(`.g-name-${i}`)?.value?.trim() || '';
-    if (!name) return;
-    const affil = list.querySelector(`.g-affil-${i}`)?.value?.trim() || null;
-    const title = list.querySelector(`.g-title-${i}`)?.value?.trim() || null;
-    const mode = list.querySelector(`.g-mode-${i}`)?.value?.trim() || null;
-    guests.push({ name, affiliation: affil, title, mode });
+function collectDrawerCornersFromDOM() {
+  const container = document.getElementById('drawer-corners');
+  if (!container) return [];
+  const cornerBlocks = container.querySelectorAll('.corner-block');
+  const corners = [];
+  cornerBlocks.forEach((block, ci) => {
+    const nameEl = block.querySelector(`.corner-name-${ci}`);
+    const name = nameEl?.value?.trim() || '';
+    const guestList = block.querySelector('.guest-list');
+    const guests = [];
+    if (guestList) {
+      const entries = guestList.querySelectorAll('.guest-entry');
+      entries.forEach((_, gi) => {
+        const gname = block.querySelector(`.g-name-${ci}-${gi}`)?.value?.trim() || '';
+        if (!gname) return;
+        const gaffil = block.querySelector(`.g-affil-${ci}-${gi}`)?.value?.trim() || null;
+        const gtitle = block.querySelector(`.g-title-${ci}-${gi}`)?.value?.trim() || null;
+        const gmode = block.querySelector(`.g-mode-${ci}-${gi}`)?.value?.trim() || null;
+        guests.push({ name: gname, affiliation: gaffil, title: gtitle, mode: gmode });
+      });
+    }
+    // 코너명이 있거나 게스트가 있을 때만 포함
+    if (name || guests.length > 0) {
+      corners.push({ name, guests });
+    }
   });
-  return guests;
+  return corners;
 }
 
 async function saveScheduleCell() {
   if (!state.scheduleDrawer) return;
   const { program, day } = state.scheduleDrawer;
   const key = scheduleKey(program, day);
-  const corner = document.getElementById('drawer-corner')?.value?.trim() || '';
-  const guests = collectDrawerGuestsFromDOM();
+  const corners = collectDrawerCornersFromDOM();
 
-  if (!corner && guests.length === 0) {
+  if (corners.length === 0) {
     delete state.scheduleData[key];
   } else {
-    state.scheduleData[key] = { corner, guests };
+    state.scheduleData[key] = { corners };
   }
 
   try {
@@ -2465,37 +2660,47 @@ async function handleParseScheduleImport() {
     showNotify('붙여넣은 텍스트가 너무 짧습니다', true);
     return;
   }
-  const entries = parseScheduleText(text);
+  const { entries, unmatched } = parseScheduleText(text);
   if (entries.length === 0) {
-    showNotify('인식된 스케줄 항목이 없습니다', true);
+    showNotify(`인식된 항목이 없습니다 (미매칭 ${unmatched.length}건 - 콘솔 확인)`, true);
+    console.log('[스케줄 파싱] 미매칭 라인:', unmatched);
     return;
   }
 
-  // 기존 스케줄에 병합
+  // 기존 스케줄에 병합 (다중 코너 구조)
   for (const e of entries) {
     if (!e.day || !DAY_NAMES.includes(e.day)) continue;
     if (!e.program) continue;
-    // 프로그램명이 우리 프로그램 리스트에 있는지 확인 (short name 도 허용)
-    let matchedProgram = e.program;
+
+    // 프로그램명 매칭
     const prog = PROGRAMS.find(p => p.name === e.program || p.shortName === e.program);
-    if (prog) matchedProgram = prog.name;
+    const matchedProgram = prog ? prog.name : e.program;
 
     const key = scheduleKey(matchedProgram, e.day);
-    const existing = state.scheduleData[key] || { corner: '', guests: [] };
-    const newCorner = e.corner || existing.corner;
-    // 게스트 병합 (중복 이름은 스킵)
-    const mergedGuests = [...existing.guests];
-    for (const g of e.guests) {
-      if (!mergedGuests.some(x => x.name === g.name && x.affiliation === g.affiliation)) {
-        mergedGuests.push(g);
-      }
+    if (!state.scheduleData[key]) {
+      state.scheduleData[key] = { corners: [] };
     }
-    state.scheduleData[key] = { corner: newCorner, guests: mergedGuests };
+    const corners = state.scheduleData[key].corners;
+
+    // 같은 이름의 코너가 있으면 병합, 없으면 새로 추가
+    let cornerObj = corners.find(c => c.name === (e.corner || ''));
+    if (!cornerObj) {
+      cornerObj = { name: e.corner || '', guests: [] };
+      corners.push(cornerObj);
+    }
+    // 중복 게스트 방지
+    if (!cornerObj.guests.some(g => g.name === e.guest.name && g.affiliation === e.guest.affiliation)) {
+      cornerObj.guests.push(e.guest);
+    }
   }
 
   try {
     await saveScheduleWeek(state.scheduleWeek, state.scheduleData);
-    showNotify(`${entries.length}개 항목 반영 완료`);
+    const msg = `${entries.length}건 반영 완료` + (unmatched.length > 0 ? ` (미매칭 ${unmatched.length}건)` : '');
+    showNotify(msg);
+    if (unmatched.length > 0) {
+      console.log('[스케줄 파싱] 미매칭 라인:', unmatched);
+    }
   } catch (e) {
     showNotify('저장 실패', true);
   }
@@ -2625,25 +2830,45 @@ function attachHandlers() {
         case 'delete-schedule-cell': await deleteScheduleCell(); break;
         case 'add-guest': {
           if (!state.scheduleDrawer) break;
+          const cornerIdx = parseInt(btn.dataset.cornerIdx || '0');
           const key = scheduleKey(state.scheduleDrawer.program, state.scheduleDrawer.day);
-          // DOM에서 현재 값 먼저 수집 (재렌더에서 초기화되지 않도록)
-          const existingGuests = collectDrawerGuestsFromDOM();
-          const cornerVal = document.getElementById('drawer-corner')?.value?.trim() || '';
-          state.scheduleData[key] = {
-            corner: cornerVal,
-            guests: [...existingGuests, { name: '', affiliation: '', title: '', mode: '' }]
-          };
+          // 현재 DOM 값 수집 후 새 게스트 추가
+          const currentCorners = collectDrawerCornersFromDOM();
+          while (currentCorners.length <= cornerIdx) currentCorners.push({ name: '', guests: [] });
+          currentCorners[cornerIdx].guests.push({ name: '', affiliation: '', title: '', mode: '' });
+          state.scheduleData[key] = { corners: currentCorners };
           renderApp();
           break;
         }
         case 'remove-guest': {
           if (!state.scheduleDrawer) break;
-          const idx = parseInt(btn.dataset.idx || '0');
+          const cornerIdx = parseInt(btn.dataset.cornerIdx || '0');
+          const gi = parseInt(btn.dataset.idx || '0');
           const key = scheduleKey(state.scheduleDrawer.program, state.scheduleDrawer.day);
-          const existingGuests = collectDrawerGuestsFromDOM();
-          const cornerVal = document.getElementById('drawer-corner')?.value?.trim() || '';
-          existingGuests.splice(idx, 1);
-          state.scheduleData[key] = { corner: cornerVal, guests: existingGuests };
+          const currentCorners = collectDrawerCornersFromDOM();
+          if (currentCorners[cornerIdx]) {
+            currentCorners[cornerIdx].guests.splice(gi, 1);
+          }
+          state.scheduleData[key] = { corners: currentCorners };
+          renderApp();
+          break;
+        }
+        case 'add-corner': {
+          if (!state.scheduleDrawer) break;
+          const key = scheduleKey(state.scheduleDrawer.program, state.scheduleDrawer.day);
+          const currentCorners = collectDrawerCornersFromDOM();
+          currentCorners.push({ name: '', guests: [] });
+          state.scheduleData[key] = { corners: currentCorners };
+          renderApp();
+          break;
+        }
+        case 'remove-corner': {
+          if (!state.scheduleDrawer) break;
+          const cornerIdx = parseInt(btn.dataset.idx || '0');
+          const key = scheduleKey(state.scheduleDrawer.program, state.scheduleDrawer.day);
+          const currentCorners = collectDrawerCornersFromDOM();
+          currentCorners.splice(cornerIdx, 1);
+          state.scheduleData[key] = { corners: currentCorners };
           renderApp();
           break;
         }
@@ -2748,11 +2973,16 @@ async function handleRunAICheck() {
   state.aiCheckLoading = true; renderApp();
   try {
     const res = await runAICheck(state.manuscript.raw);
-    state.aiChecks = res || [];
-    showNotify(`AI 검수 완료 · ${res.length}건 지적`);
+    state.aiChecks = res.checks || [];
+    console.log("[검수 진단]", { source: res.source, diagnostics: res.diagnostics });
+    if (res.source === "실패" || (res.checks.length === 0 && res.diagnostics?.some(d => /실패/.test(d)))) {
+      showNotify(`검수 서버 접속 실패 - 콘솔(F12) 확인`, true);
+    } else {
+      showNotify(`${res.source} · ${res.checks.length}건 지적`);
+    }
   } catch (e) {
     console.error(e);
-    showNotify('AI 검수 실패: ' + e.message, true);
+    showNotify('검수 실패: ' + e.message, true);
     state.aiChecks = [];
   } finally {
     state.aiCheckLoading = false; renderApp();
