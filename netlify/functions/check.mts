@@ -1,18 +1,31 @@
-// 맞춤법 검수 프록시 — 부산대 검사기
-// 1차: speller.town (오픈소스 wrapper)
-// 2차 fallback: 부산대 직접 (nara-speller.co.kr)
-// 3차 fallback: 이전 부산대 URL (speller.cs.pusan.ac.kr)
+// 맞춤법 검수 프록시 — 바른 (bareun.ai) 클라우드 REST API
+//
+// 스펙:
+//   URL: https://api.bareun.ai/bareun.RevisionService/CorrectError
+//   Method: POST
+//   Header: api-key, Content-Type: application/json
+//   Body:  { document: { content, language: "ko-KR" }, encoding_type: "UTF8" }
+//   응답:  { origin, revised, revised_blocks: [{ origin, revised, revisions: [{ revised, category, helps: { comment } }] }] }
+//
+// API 키는 Netlify 환경변수 BAREUN_API_KEY 에 등록되어 있어야 합니다.
+// 무료 구간: 하루 50,000 어절
 
-const SPELLER_TOWN = "https://speller.town";
-const NARA_SPELLER = "https://nara-speller.co.kr/speller/results";
-const OLD_PUSAN = "http://speller.cs.pusan.ac.kr/results";
-const CHUNK_SIZE = 480;
-const MAX_CHUNKS = 15;
-const TIMEOUT_MS = 15000;
+const BAREUN_URL = "https://api.bareun.ai/bareun.RevisionService/CorrectError";
+const CHUNK_SIZE = 1500;    // 바른은 문단 단위 권장, 넉넉하게
+const MAX_CHUNKS = 20;
+const TIMEOUT_MS = 30000;   // 30초 (AI 기반이라 여유)
 
 export default async (req: Request) => {
   if (req.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
+  }
+
+  const apiKey = process.env.BAREUN_API_KEY;
+  if (!apiKey) {
+    return json({
+      error: "서버 설정 오류 - BAREUN_API_KEY 미등록",
+      hint: "Netlify 환경변수에 BAREUN_API_KEY 등록 필요"
+    }, 500);
   }
 
   let body: any;
@@ -32,50 +45,24 @@ export default async (req: Request) => {
 
   const allChecks: any[] = [];
   const diagnostics: string[] = [];
-  let usedSource = "";
+  let success = 0;
+  let failed = 0;
 
   for (let i = 0; i < chunks.length; i++) {
     const chunk = chunks[i];
-    let found: any[] | null = null;
-
-    // 시도 1: speller.town
     try {
-      found = await checkViaSpellerTown(chunk);
-      if (found !== null) {
-        if (!usedSource) usedSource = "speller.town";
-        diagnostics.push(`chunk ${i + 1}: speller.town OK (${found.length}건)`);
+      const found = await checkViaBareun(chunk, apiKey);
+      if (found && found.length > 0) {
+        allChecks.push(...found);
       }
+      success++;
+      diagnostics.push(`chunk ${i + 1}: OK (${found?.length || 0}건)`);
     } catch (e: any) {
-      diagnostics.push(`chunk ${i + 1}: speller.town 실패 — ${e.message}`);
+      failed++;
+      const msg = e.message || "unknown";
+      diagnostics.push(`chunk ${i + 1}: 실패 — ${msg}`);
+      console.error(`[check] chunk ${i + 1} 실패:`, msg);
     }
-
-    // 시도 2: nara-speller.co.kr (부산대 공식 통합 URL)
-    if (found === null) {
-      try {
-        found = await checkViaNaraSpeller(chunk);
-        if (found !== null) {
-          if (!usedSource) usedSource = "nara-speller (부산대 직접)";
-          diagnostics.push(`chunk ${i + 1}: nara-speller OK (${found.length}건)`);
-        }
-      } catch (e: any) {
-        diagnostics.push(`chunk ${i + 1}: nara-speller 실패 — ${e.message}`);
-      }
-    }
-
-    // 시도 3: 이전 부산대 URL
-    if (found === null) {
-      try {
-        found = await checkViaOldPusan(chunk);
-        if (found !== null) {
-          if (!usedSource) usedSource = "부산대 (구 URL)";
-          diagnostics.push(`chunk ${i + 1}: 구 URL OK (${found.length}건)`);
-        }
-      } catch (e: any) {
-        diagnostics.push(`chunk ${i + 1}: 구 URL 실패 — ${e.message}`);
-      }
-    }
-
-    if (found) allChecks.push(...found);
   }
 
   // 중복 제거
@@ -87,194 +74,106 @@ export default async (req: Request) => {
     return true;
   });
 
-  console.log(`[check] 소스=${usedSource || "모두 실패"}, 청크=${chunks.length}, 지적=${deduped.length}건`);
-  console.log("[check] diagnostics:", diagnostics.slice(0, 5));
+  console.log(`[check] 바른 · 청크 ${chunks.length} (성공 ${success}, 실패 ${failed}) · 지적 ${deduped.length}건`);
 
   return json({
     checks: deduped,
-    source: usedSource || "실패",
+    source: failed === chunks.length ? "실패" : "바른 (bareun.ai)",
     chunks: chunks.length,
+    success,
+    failed,
     total: deduped.length,
     diagnostics: diagnostics.slice(0, 10)
   });
 };
 
 // -----------------------------------------------------------------
-// speller.town — JSON 응답, 파싱 쉬움
+// 바른 REST API 호출
 // -----------------------------------------------------------------
-async function checkViaSpellerTown(text: string): Promise<any[]> {
+async function checkViaBareun(text: string, apiKey: string): Promise<any[]> {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const resp = await fetch(SPELLER_TOWN, {
+    const resp = await fetch(BAREUN_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "AIRSCRIPT/1.0"
+        "api-key": apiKey,
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({
+        document: {
+          content: text,
+          language: "ko-KR"
+        },
+        encoding_type: "UTF8",
+        config: {
+          // 문장 자동 분할 사용 (기본)
+          // 복합명사 분리 사전 적용 (기본)
+          // 불필요 공백 정리
+          enable_cleanup_whitespace: true
+        }
+      }),
       signal: controller.signal
     });
 
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    if (!resp.ok) {
+      let errBody: any = null;
+      try { errBody = await resp.json(); } catch {}
+      const errMsg = errBody?.error?.message || errBody?.message || errBody?.error || `HTTP ${resp.status}`;
+      if (resp.status === 401 || resp.status === 403) {
+        throw new Error(`인증 실패 — API 키 확인 (${errMsg})`);
+      }
+      if (resp.status === 429) {
+        throw new Error(`무료 할당량 초과 — 하루 50,000 어절 초과 (${errMsg})`);
+      }
+      throw new Error(`HTTP ${resp.status}: ${errMsg}`);
+    }
 
     const data: any = await resp.json();
-    const suggestions: any[] = Array.isArray(data?.suggestions) ? data.suggestions : [];
+    const blocks: any[] = Array.isArray(data?.revised_blocks) ? data.revised_blocks : [];
 
-    return suggestions
-      .map((s: any) => {
-        const candArr: string[] = Array.isArray(s.candidates) ? s.candidates : [];
-        const firstCand = candArr[0] || "";
-        const origText = String(s.text || "");
-        if (!origText || !firstCand || origText === firstCand) return null;
-        const desc = String(s.description || "").trim();
-        let type: "error" | "warn" | "suggest" = "error";
-        if (/추천|권장|일 수 있|의심|가능성/.test(desc)) type = "suggest";
-        else if (/띄어쓰기|공백/.test(desc)) type = "warn";
-        return {
-          text: origText,
-          suggestion: firstCand,
-          reason: desc.slice(0, 60) || "맞춤법·띄어쓰기",
-          type,
-          layer: "L4·부산대"
-        };
-      })
-      .filter(Boolean);
-  } finally {
-    clearTimeout(t);
-  }
-}
+    // 각 revised_block 을 우리 시스템의 check 형식으로 변환
+    const results: any[] = [];
+    for (const block of blocks) {
+      const origin = String(block?.origin || "").trim();
+      const revised = String(block?.revised || "").trim();
+      if (!origin || !revised || origin === revised) continue;
 
-// -----------------------------------------------------------------
-// nara-speller.co.kr — HTML 응답, JS 변수 data 파싱
-// -----------------------------------------------------------------
-async function checkViaNaraSpeller(text: string): Promise<any[]> {
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), TIMEOUT_MS);
+      // revisions 배열에서 첫 번째 항목의 category, comment 추출
+      const revisions: any[] = Array.isArray(block.revisions) ? block.revisions : [];
+      const firstRev = revisions[0] || {};
+      const category = String(firstRev.category || "").trim();
+      const comment = String(firstRev.helps?.comment || "").replace(/<[^>]+>/g, "").trim();
+      const reason = comment || category || "맞춤법·띄어쓰기";
 
-  try {
-    const params = new URLSearchParams();
-    params.append("text1", text);
-
-    const resp = await fetch(NARA_SPELLER, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        Origin: "https://nara-speller.co.kr",
-        Referer: "https://nara-speller.co.kr/speller/",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7"
-      },
-      body: params.toString(),
-      signal: controller.signal
-    });
-
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-    const html = await resp.text();
-    return parseBusanHtml(html);
-  } finally {
-    clearTimeout(t);
-  }
-}
-
-// -----------------------------------------------------------------
-// speller.cs.pusan.ac.kr — 이전 URL (백업)
-// -----------------------------------------------------------------
-async function checkViaOldPusan(text: string): Promise<any[]> {
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  try {
-    const params = new URLSearchParams();
-    params.append("text1", text);
-
-    const resp = await fetch(OLD_PUSAN, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36",
-        Referer: "http://speller.cs.pusan.ac.kr/"
-      },
-      body: params.toString(),
-      signal: controller.signal
-    });
-
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-    const html = await resp.text();
-    return parseBusanHtml(html);
-  } finally {
-    clearTimeout(t);
-  }
-}
-
-// -----------------------------------------------------------------
-// 부산대 HTML 응답 파싱 — data = [{errInfo: [...]}] 변수 추출
-// -----------------------------------------------------------------
-function parseBusanHtml(html: string): any[] {
-  const patterns = [
-    /(?:var\s+)?data\s*=\s*(\[[\s\S]*?\]);/,
-    /errorInfo\s*=\s*(\[[\s\S]*?\]);/,
-    /"errInfo"\s*:\s*(\[[\s\S]*?\])/
-  ];
-
-  let data: any = null;
-  for (const re of patterns) {
-    const m = html.match(re);
-    if (m) {
-      try {
-        data = JSON.parse(m[1]);
-        break;
-      } catch (e) {
-        // 다음 패턴 시도
-      }
-    }
-  }
-
-  if (!data) throw new Error("응답에서 오류 데이터 추출 실패");
-
-  const results: any[] = [];
-  const items = Array.isArray(data) ? data : [data];
-  for (const item of items) {
-    const errInfo = Array.isArray(item.errInfo) ? item.errInfo : Array.isArray(item) ? item : [];
-    for (const err of errInfo) {
-      const orgStr = String(err.orgStr || err.original || "").trim();
-      const candStr = String(err.candWord || err.candidate || err.suggestion || "").trim();
-      if (!orgStr || !candStr) continue;
-      const cands = candStr.split(/[|,]/).map((s) => s.trim()).filter(Boolean);
-      const firstCand = cands[0];
-      if (!firstCand || firstCand === orgStr) continue;
-
-      const help = String(err.help || err.description || "")
-        .replace(/<[^>]+>/g, "")
-        .replace(/&nbsp;/g, " ")
-        .trim();
-
-      const method = Number(err.correctMethod || 0);
+      // 카테고리 기반 타입 분류
       let type: "error" | "warn" | "suggest" = "error";
-      if (method === 2) type = "warn";
-      else if (method >= 3 || /추천|권장|의심/.test(help)) type = "suggest";
+      const catLower = category.toLowerCase();
+      if (/띄어쓰기|공백|whitespace|spacing/.test(category) || /띄어쓰기|공백/.test(reason)) {
+        type = "warn";
+      } else if (/추천|권장|의심|가능성|suggest/i.test(category + reason)) {
+        type = "suggest";
+      }
 
       results.push({
-        text: orgStr,
-        suggestion: firstCand,
-        reason: help.slice(0, 60) || "맞춤법·띄어쓰기",
+        text: origin,
+        suggestion: revised,
+        reason: reason.slice(0, 80),
         type,
-        layer: "L4·부산대"
+        layer: "L4·바른",
+        category: category || undefined
       });
     }
-  }
 
-  return results;
+    return results;
+  } finally {
+    clearTimeout(t);
+  }
 }
 
 // -----------------------------------------------------------------
-// CG 지시어 라인 제외
+// CG 지시어 라인 제외 (검수 대상 아님)
 // -----------------------------------------------------------------
 function filterOutCGLines(text: string): string {
   const lines = text.split("\n");
@@ -284,6 +183,9 @@ function filterOutCGLines(text: string): string {
   return filtered.join("\n");
 }
 
+// -----------------------------------------------------------------
+// 라인 단위 청크 (문단 경계 존중)
+// -----------------------------------------------------------------
 function chunkByLines(text: string, target: number): string[] {
   const lines = text.split("\n");
   const chunks: string[] = [];
