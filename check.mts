@@ -154,28 +154,31 @@ async function checkViaBareun(text: string, apiKey: string): Promise<{ checks: a
 
     const results: any[] = [];
     for (const block of blocks) {
-      const origin = String(block?.origin || "").trim();
-      const revised = String(block?.revised || "").trim();
+      // origin 은 텍스트 조각 객체 { content, beginOffset, length } 로 옴
+      const origin = extractText(block?.origin);
+      const revised = extractText(block?.revised);
       if (!origin || !revised || origin === revised) continue;
 
       // revisions 배열 (교정 후보들)
       const revisions: any[] = Array.isArray(block.revisions) ? block.revisions : [];
       const firstRev = revisions[0] || {};
 
-      // 카테고리 추출
+      // 카테고리
       const category = String(firstRev.category || firstRev.helpCategory || "").trim();
 
-      // 설명 추출 (helps.comment 또는 help.comment)
+      // 설명: helpId 를 friendly 하게 변환, 또는 helps.comment 사용
       const helps = firstRev.helps || firstRev.help || {};
       const comment = String(helps?.comment || "").replace(/<[^>]+>/g, "").trim();
-      const reason = comment || category || "맞춤법·띄어쓰기";
+      const helpId = String(firstRev.helpId || firstRev.help_id || "").trim();
+      const helpIdFriendly = helpId ? helpId.replace(/_/g, " · ") : "";
+      const reason = comment || helpIdFriendly || categoryToLabel(category) || "맞춤법·띄어쓰기";
 
       // 카테고리 기반 타입 분류
       let type: "error" | "warn" | "suggest" = "error";
-      const catText = category + " " + reason;
-      if (/띄어쓰기|공백|whitespace|spacing/i.test(catText)) {
+      const catUpper = category.toUpperCase();
+      if (catUpper === "SPACING" || /띄어쓰기|공백|whitespace/i.test(category + " " + reason)) {
         type = "warn";
-      } else if (/추천|권장|의심|가능성|suggest/i.test(catText)) {
+      } else if (/추천|권장|의심|가능성|suggest/i.test(category + " " + reason)) {
         type = "suggest";
       }
 
@@ -193,6 +196,28 @@ async function checkViaBareun(text: string, apiKey: string): Promise<{ checks: a
   } finally {
     clearTimeout(t);
   }
+}
+
+// origin/revised 필드 추출 - 문자열이거나 { content } 객체
+function extractText(v: any): string {
+  if (v == null) return "";
+  if (typeof v === "string") return v.trim();
+  if (typeof v === "object") return String(v.content || v.text || "").trim();
+  return String(v).trim();
+}
+
+// 카테고리 코드를 한국어 라벨로
+function categoryToLabel(cat: string): string {
+  if (!cat) return "";
+  const c = cat.toUpperCase();
+  if (c === "SPACING") return "띄어쓰기";
+  if (c === "TYPO") return "오탈자";
+  if (c === "GRAMMAR") return "어법";
+  if (c === "STANDARD") return "표준어";
+  if (c === "PUNCTUATION") return "문장부호";
+  if (c === "FOREIGN") return "외래어 표기";
+  if (c === "SENTENCE") return "문장";
+  return cat;
 }
 
 // -----------------------------------------------------------------
