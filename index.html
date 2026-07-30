@@ -1469,7 +1469,7 @@ function renderSidebar() {
       <div class="sidebar-footer">
         <div class="settings-btn has-key" style="cursor:default">
           ${icon('i-check', 12)}
-          <span>부산대 맞춤법 · 무료 검수</span>
+          <span>바른 AI 맞춤법 · 무료 검수</span>
         </div>
         한국경제 TV<br>
         제작1부
@@ -2091,6 +2091,7 @@ function parseScheduleText(text) {
   const DAY_NAMES = ['월', '화', '수', '목', '금'];
 
   let currentProgram = null;
+  let currentSuperCorner = null;   // <X> 로 설정된 상위 카테고리 (요일 변경에도 유지)
   let currentCorner = null;
   let currentDay = null;
   let hierarchyMode = null;  // 'day-first' | 'corner-first' | null
@@ -2113,6 +2114,7 @@ function parseScheduleText(text) {
 
   // 코너 헤더
   const bracketCornerRe = /^\[([^\]]{2,25})\]$/;
+  const angleCornerRe = /^<([^>]{2,25})>$/;                        // <투자 전략>
   const arrowCornerRe = /^▶\s*(.+)$/;
   const hyphenCornerColonGuestRe = /^-\s*(.+?)\s*:\s*(.+)$/;   // -리포트 비하인드 : 이해니
   const hyphenCornerOnlyRe = /^-\s*(.+)$/;                       // -증시 숏담화
@@ -2120,7 +2122,10 @@ function parseScheduleText(text) {
   // 요일 접두 게스트
   const dayGuestSlashRe = /^([월화수목금토일])\s*\/\s*(.+)$/;    // 월/ 이름 or 월 / 이름
   const dayGuestParenRe = /^([월화수목금토일])\s*\)\s*(.+)$/;    // 월) 이름
+  const parenDayLineRe = /^\(([월화수목금토일])\)\s+(.+)$/;       // (월) 나머지 (한 줄에 요일+세부)
   const colonGuestRe = /^[:：]\s*(.+)$/;                          // : 이름
+  // 특별 라인 (매일 항목): *이 시각 환율 / 이름 소속
+  const starLineRe = /^\*\s*(.+)$/;
 
   const titleSuffixes = ['수석연구위원', '연구위원', '부센터장', '부부장', '본부장', '센터장', '이코노미스트', '리서치센터장', '리서치센터', 'PB팀장', 'ETF팀 부장', '포트폴리오 매니저', '대표', '이사', '팀장', '부장', '교수', '위원', '전무', '상무', '실장', '차장', '과장', '소장', '지점장', '연구원', '기자', '앵커', 'PB', '매니저', '뉴욕', '워싱턴', '실리콘밸리', '베이징', '도쿄', '런던', '파리', '홍콩'];
   titleSuffixes.sort((a, b) => b.length - a.length);  // 긴 것부터 매칭
@@ -2130,15 +2135,21 @@ function parseScheduleText(text) {
   const AFFIL_KEYWORDS = [
     '증권', '자문', '자산운용', '은행', '보험', '리서치', '연구소', '연구원', '컨설팅',
     '금융', '캐피탈', '뱅크', '컴퍼니', '인베스트먼트', '펀드', '자문단', '경제연구',
+    '證', '硏', '銀', '券',  // 한자 축약형
     'KB', 'LS', 'NH', 'SK', 'DS', 'iM', 'IBK', 'BNK', 'JB', 'DGB', 'MG',
     '삼성', '한화', '미래에셋', '메리츠', '한국투자', '신한', '하나', '우리', '농협', '기업은행',
     'Prestige', '와이즈', '유안타', '유진', '유경', '유니스토리', '타임폴리오', '레그넘', '위즈웨이브',
     '이코노미스트', 'AMC', 'GFM', '홀딩스', '전문가', '경영전략', '벤투스', '그레너리', '현명',
-    '엠디', '주머니', '다이와', '체슬리', '렉스셰어즈', '위즈', '퍼스트프라임', '한국경제', '모멘텀트리'
+    '엠디', '주머니', '다이와', '체슬리', '렉스셰어즈', '위즈', '퍼스트프라임', '한국경제', '모멘텀트리',
+    '에이원', '지엘', '그로쓰', '프레스티지', '인벡스', '딜링룸', '국민', '지엘리서치'
   ];
   function hasAffilKeyword(text) {
     if (!text) return false;
     return AFFIL_KEYWORDS.some(k => text.includes(k));
+  }
+  function hasTitleSuffix(text) {
+    if (!text) return false;
+    return titleSuffixes.some(s => text.endsWith(s));
   }
 
   function normalizeProgramName(raw) {
@@ -2204,6 +2215,7 @@ function parseScheduleText(text) {
   function setProgram(name) {
     const normalized = normalizeProgramName(name);
     currentProgram = normalized || name.trim();
+    currentSuperCorner = null;
     currentCorner = null;
     currentDay = null;
     hierarchyMode = null;
@@ -2211,7 +2223,7 @@ function parseScheduleText(text) {
 
   function setDay(day) {
     if (hierarchyMode === null) hierarchyMode = 'day-first';
-    if (hierarchyMode === 'day-first') currentCorner = null;  // day 변경 → corner 리셋
+    if (hierarchyMode === 'day-first') currentCorner = null;  // day 변경 → 세부코너만 리셋 (상위코너는 유지)
     currentDay = day;
   }
 
@@ -2221,16 +2233,22 @@ function parseScheduleText(text) {
     currentCorner = name;
   }
 
+  function setSuperCorner(name) {
+    // <X> 상위 카테고리 - day 나 mode 에 영향 없음
+    currentSuperCorner = name;
+    currentCorner = null;   // 새 상위 카테고리 시작 시 세부코너 초기화
+  }
+
   function addEntry(guest) {
     if (!currentProgram || !guest?.name) {
       unmatched.push({ line: guest?.name || '?', program: currentProgram });
       return;
     }
+    // 최종 코너: 세부코너 우선, 없으면 상위코너
+    const finalCorner = currentCorner || currentSuperCorner || '';
     if (!currentDay) {
-      // 요일 미지정 - 코너 아래 요일 없이 게스트 나온 경우 (예: 머플의 [송재호의 골든픽])
-      // → 월~금 모두 저장
       for (const d of DAY_NAMES) {
-        entries.push({ program: currentProgram, day: d, corner: currentCorner || '', guest });
+        entries.push({ program: currentProgram, day: d, corner: finalCorner, guest });
       }
       return;
     }
@@ -2238,7 +2256,63 @@ function parseScheduleText(text) {
       unmatched.push({ line: guest.name, program: currentProgram, day: currentDay });
       return;
     }
-    entries.push({ program: currentProgram, day: currentDay, corner: currentCorner || '', guest });
+    entries.push({ program: currentProgram, day: currentDay, corner: finalCorner, guest });
+  }
+
+  // (요일) 뒤에 붙은 나머지 파싱
+  // 예: "[증시특보] - 조준기 SK證"      → 세부코너 [증시특보], 게스트 조준기
+  //     "[베스트 애널 전략] 정유·화학 - 윤재성 하나證" → 세부코너 [베스트 애널 전략], 게스트 윤재성
+  //     "시시각각 - 조일교 에이원리서치 대표"  → 세부코너 시시각각, 게스트 조일교
+  //     "최수창 엠디컨설팅 대표 / 김경언 메리츠 차장" → 게스트 2명 (슬래시 분리)
+  //     "박세익 체슬리투자자문 대표"    → 게스트만
+  //     "이 시각 환율 / 문정희·이민혁 KB국민은행 딜링룸 (전화)" → 항목명 + 게스트
+  //
+  // 주의: 이 함수 안에서는 setCorner() 대신 currentCorner 직접 조작.
+  //       setCorner() 호출 시 hierarchy mode 가 corner-first 면 day 가 리셋되는데,
+  //       (요일)···] 라인은 명확히 day-first 계층이라 day 를 유지해야 함.
+  function processDayLineRest(rest) {
+    if (!rest) return;
+    rest = rest.trim();
+
+    // 브래킷 세부코너 있는 경우: [X] ... - 게스트
+    let bm = rest.match(/^\[([^\]]+)\]\s*(.*)$/);
+    if (bm) {
+      currentCorner = bm[1].trim();   // day 유지 위해 직접 설정
+      const after = bm[2].trim();
+      if (!after) return;
+      const dashMatch = after.match(/[-–]\s*(.+)$/);
+      if (dashMatch) {
+        splitAndAddGuests(dashMatch[1].trim());
+      } else {
+        splitAndAddGuests(after);
+      }
+      return;
+    }
+
+    // 대시로 코너 + 게스트 분리: 코너명 - 게스트
+    let dm2 = rest.match(/^([^-–\/]+?)\s*[-–]\s*(.+)$/);
+    if (dm2) {
+      const before = dm2[1].trim();
+      const after = dm2[2].trim();
+      if (before.length <= 20 && !hasAffilKeyword(before) && !hasTitleSuffix(before)) {
+        currentCorner = before;   // day 유지 위해 직접 설정
+        splitAndAddGuests(after);
+        return;
+      }
+    }
+
+    // 그 외: 슬래시로 나눠서 게스트로 처리
+    splitAndAddGuests(rest);
+  }
+
+  function splitAndAddGuests(text) {
+    if (!text) return;
+    // 슬래시로 여러 게스트 분리 (문정희·이민혁 처럼 · 는 이름연결이니 유지)
+    const parts = text.split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean);
+    for (const p of parts) {
+      const guest = parseGuestInfo(p);
+      if (guest) addEntry(guest);
+    }
   }
 
   for (let i = 0; i < lines.length; i++) {
@@ -2271,8 +2345,30 @@ function parseScheduleText(text) {
     else if ((dm = line.match(parenDayRe))) { setDay(dm[1]); daySet = true; }
     else if ((dm = line.match(arrowDayRe))) { setDay(dm[1]); daySet = true; }
     else if ((dm = line.match(dayWordRe))) { setDay(dm[1]); daySet = true; }
-    // 주의: closeParenDayRe (월)) 는 game with 게스트 포함될 수 있으므로 별도 처리 (아래)
+    // 주의: closeParenDayRe (월)) 는 게스트 포함될 수 있으므로 별도 처리 (아래)
     if (daySet) continue;
+
+    // (2.5) 출발증시 스타일: (요일) 나머지 - 한 줄에 요일 + 세부코너 + 게스트
+    let pdlm;
+    if ((pdlm = line.match(parenDayLineRe))) {
+      hierarchyMode = 'day-first';   // (요일) [세부] 형태는 명확히 day-first 계층
+      setDay(pdlm[1]);
+      const rest = pdlm[2].trim();
+      processDayLineRest(rest);
+      continue;
+    }
+
+    // (2.6) *이 시각 환율 / 문정희·이민혁 KB국민은행 딜링룸 (전화) - 매일 항목
+    let stm;
+    if ((stm = line.match(starLineRe))) {
+      const rest = stm[1].trim();
+      // 매일 항목: 요일을 null 로 두면 addEntry 가 월~금 모두에 배정
+      const savedDay = currentDay;
+      currentDay = null;
+      processDayLineRest(rest);
+      currentDay = savedDay;
+      continue;
+    }
 
     // (3) 요일 접두 게스트 (한 줄에 요일 + 게스트)
     let dgm;
@@ -2320,6 +2416,16 @@ function parseScheduleText(text) {
       const cornerName = bcm[1].trim();
       if (!/스케줄|일정|편성/.test(cornerName) && !/^(답변|인사|질문\d*|정리|내용|CG)$/.test(cornerName)) {
         setCorner(cornerName);
+        continue;
+      }
+    }
+
+    // (7.5) 각괄호 코너 <코너명> (출발증시 스타일 상위 카테고리)
+    let acm2;
+    if ((acm2 = line.match(angleCornerRe))) {
+      const cornerName = acm2[1].trim();
+      if (!/스케줄|일정|편성/.test(cornerName)) {
+        setSuperCorner(cornerName);   // 상위 카테고리로 (요일 변경에도 유지)
         continue;
       }
     }
@@ -2975,8 +3081,10 @@ async function handleRunAICheck() {
     const res = await runAICheck(state.manuscript.raw);
     state.aiChecks = res.checks || [];
     console.log("[검수 진단]", { source: res.source, diagnostics: res.diagnostics });
-    if (res.source === "실패" || (res.checks.length === 0 && res.diagnostics?.some(d => /실패/.test(d)))) {
-      showNotify(`검수 서버 접속 실패 - 콘솔(F12) 확인`, true);
+    if (res.source === "실패") {
+      showNotify(`검수 실패 - F12 콘솔의 진단 로그 확인`, true);
+    } else if (res.checks.length === 0) {
+      showNotify(`${res.source} · 지적 사항 없음 (검수 통과)`);
     } else {
       showNotify(`${res.source} · ${res.checks.length}건 지적`);
     }
