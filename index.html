@@ -262,26 +262,32 @@ body {
 
 /* ============= HIGHLIGHTS ============= */
 .hl-error {
-  background: rgba(185,28,28,0.12);
-  border-bottom: 2px wavy #b91c1c;
-  padding: 1px 3px;
+  background: rgba(185,28,28,0.06);
+  border-bottom: 1px dashed rgba(185,28,28,0.55);
+  padding: 1px 2px;
   border-radius: 2px;
   cursor: help;
+  transition: background 0.15s;
 }
+.hl-error:hover { background: rgba(185,28,28,0.14); }
 .hl-warn {
-  background: rgba(180,83,9,0.12);
-  border-bottom: 2px wavy #b45309;
-  padding: 1px 3px;
+  background: rgba(180,83,9,0.05);
+  border-bottom: 1px dashed rgba(180,83,9,0.5);
+  padding: 1px 2px;
   border-radius: 2px;
   cursor: help;
+  transition: background 0.15s;
 }
+.hl-warn:hover { background: rgba(180,83,9,0.13); }
 .hl-suggest {
-  background: rgba(37,99,235,0.1);
-  border-bottom: 2px dotted #2563eb;
-  padding: 1px 3px;
+  background: rgba(37,99,235,0.04);
+  border-bottom: 1px dotted rgba(37,99,235,0.55);
+  padding: 1px 2px;
   border-radius: 2px;
   cursor: help;
+  transition: background 0.15s;
 }
+.hl-suggest:hover { background: rgba(37,99,235,0.12); }
 
 /* ============= CHIPS ============= */
 .chip {
@@ -1571,7 +1577,7 @@ function renderCheck() {
       </div>
       <button class="btn btn-secondary" data-action="run-ai-check" ${state.aiCheckLoading ? 'disabled' : ''}>
         ${state.aiCheckLoading ? '<span class="loading-spin"></span>' : icon('i-sparkles')}
-        ${state.aiCheckLoading ? '네이버 검수 중...' : (state.aiChecks ? '재검수' : '네이버 맞춤법 검수')}
+        ${state.aiCheckLoading ? '바른 검수 중...' : (state.aiChecks ? '재검수' : '바른 맞춤법 검수')}
       </button>
       <button class="btn btn-primary" data-action="goto-stock">다음 · STOCK ${icon('i-right')}</button>
     </div>
@@ -3072,6 +3078,8 @@ function handleSubmitUpload() {
   state.aiExtract = null;
   state.view = 'check';
   renderApp();
+  // 자동으로 바른 AI 검수 실행 (사용자 클릭 불필요)
+  handleRunAICheck();
 }
 
 async function handleRunAICheck() {
