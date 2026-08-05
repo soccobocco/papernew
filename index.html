@@ -1145,7 +1145,10 @@ const state = {
   cgParsed: null,                // 등록 중 파싱 결과
   cgUploadRaw: '',               // 등록 중 원본 텍스트
   cgConfirmDelete: false,
-  cgFilter: 'all'                // 'all' | 'draft' | 'reviewed' | 'cg-uploaded' | 'matched' | 'issue'
+  cgFilter: 'all',               // 'all' | 'draft' | 'reviewed' | 'cg-uploaded' | 'matched' | 'issue'
+  cgImagePreview: null,          // { dataUrl, mimeType, base64 } - 업로드된 CG 이미지
+  cgReviewLoading: false,        // 대조 검수 실행 중
+  cgReviewItemIndex: 0           // 여러 CG 중 검수할 대상 (기본 통CG1)
 };
 
 // ==============================================================
@@ -3344,9 +3347,14 @@ function renderCGDetail() {
     `;
   }
 
+  const items = d.items || [];
+  const activeIdx = state.cgReviewItemIndex || 0;
+  const activeItem = items[activeIdx] || items[0];
+  const review = d.reviewResult;
+
   return `
     <div class="scroll-y" style="padding:24px 32px;flex:1">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
         <button class="btn btn-secondary" data-action="cg-back-list" style="padding:6px 10px">${icon('i-left')} 목록으로</button>
         <div style="flex:1"></div>
         ${state.cgConfirmDelete ? `
@@ -3364,50 +3372,222 @@ function renderCGDetail() {
           <span class="chip slate">${esc(d.program || '—')}</span>
           ${d.cgTypeFormat ? `<span class="chip amber">${esc(d.cgTypeFormat)}</span>` : ''}
           <div style="flex:1"></div>
-          <span class="text-mute2" style="font-size:11px">ID: ${esc(d.id)}</span>
+          ${d.status === 'matched' ? `<span class="chip emerald">${icon('i-check', 11)} 통과</span>` : ''}
+          ${d.status === 'issue' ? `<span class="chip coral">✗ 오류 ${review?.issueCount || 0}건</span>` : ''}
         </div>
       </div>
 
+      ${items.length > 1 ? `
+        <div style="display:flex;gap:6px;margin-bottom:16px">
+          ${items.map((it, i) => `
+            <button class="cg-filter-btn ${i === activeIdx ? 'active' : ''}" data-action="cg-switch-item" data-idx="${i}">
+              ${esc(it.number)} - ${esc((it.title || '').slice(0, 20))}${(it.title || '').length > 20 ? '...' : ''}
+            </button>
+          `).join('')}
+        </div>
+      ` : ''}
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div>
-          <div class="section-title">${icon('i-file')}<span class="lbl">의뢰서 원본</span></div>
-          <div class="card" style="max-height:600px;overflow-y:auto">
-            ${(d.items || []).map((it, i) => `
-              <div style="padding:${i > 0 ? '16px' : '0'} 0 16px;${i > 0 ? 'border-top:1px solid rgba(30,43,61,0.08);margin-top:16px' : ''}">
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-                  <span class="chip cyan">${esc(it.number)}</span>
-                  ${it.graphType ? `<span class="chip slate">${esc(it.graphType)}</span>` : ''}
-                </div>
-                <div class="serif" style="font-size:18px;font-weight:800;color:#1a2b3d;margin-bottom:6px">${esc(it.title || '')}</div>
-                ${it.subtitle ? `<div class="text-muted" style="font-size:12px;margin-bottom:10px">${esc(it.subtitle)}</div>` : ''}
-                ${it.dataRows.length > 0 ? `
-                  <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em;margin-top:8px;margin-bottom:4px">DATA</div>
-                  <div style="background:#faf6ec;padding:10px 12px;border-radius:3px;font-size:12px;line-height:1.7;color:#1a2b3d">
-                    ${it.dataRows.map(x => esc(x)).join('<br>')}
-                  </div>
-                ` : ''}
-                ${it.specialInstructions.length > 0 ? `
-                  <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em;margin-top:10px;margin-bottom:4px">SPECIAL INSTRUCTIONS</div>
-                  ${it.specialInstructions.map(inst => `<div style="font-size:12px;color:#b45309;padding:3px 0">▸ ${esc(inst)}</div>`).join('')}
-                ` : ''}
+          <div class="section-title">${icon('i-file')}<span class="lbl">의뢰서 원본 · ${esc(activeItem?.number || '')}</span></div>
+          <div class="card">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <span class="chip cyan">${esc(activeItem?.number || '')}</span>
+              ${activeItem?.graphType ? `<span class="chip slate">${esc(activeItem.graphType)}</span>` : ''}
+            </div>
+            <div class="serif" style="font-size:18px;font-weight:800;color:#1a2b3d;margin-bottom:6px">${esc(activeItem?.title || '')}</div>
+            ${activeItem?.subtitle ? `<div class="text-muted" style="font-size:12px;margin-bottom:10px">${esc(activeItem.subtitle)}</div>` : ''}
+            ${(activeItem?.dataRows || []).length > 0 ? `
+              <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em;margin-top:12px;margin-bottom:4px">DATA</div>
+              <div style="background:#faf6ec;padding:10px 12px;border-radius:3px;font-size:12px;line-height:1.7;color:#1a2b3d;max-height:280px;overflow-y:auto">
+                ${(activeItem.dataRows || []).map(x => esc(x)).join('<br>')}
               </div>
-            `).join('')}
+            ` : ''}
+            ${(activeItem?.specialInstructions || []).length > 0 ? `
+              <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em;margin-top:12px;margin-bottom:4px">SPECIAL INSTRUCTIONS</div>
+              ${(activeItem.specialInstructions || []).map(inst => `<div style="font-size:12px;color:#b45309;padding:3px 0">▸ ${esc(inst)}</div>`).join('')}
+            ` : ''}
           </div>
         </div>
 
         <div>
           <div class="section-title">${icon('i-file')}<span class="lbl">완성된 CG</span></div>
-          <div class="card" style="min-height:400px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px">
-            <div style="text-align:center">
-              ${icon('i-upload', 32)}
-              <div class="serif" style="font-size:14px;color:#4a5670;margin:10px 0">Phase 2 에서 지원 예정</div>
-              <div class="text-mute2" style="font-size:11px;line-height:1.6">CG 이미지 업로드 →<br>Gemini Vision OCR →<br>의뢰서 텍스트와 대조</div>
-            </div>
+          <div class="card" style="min-height:300px">
+            ${state.cgImagePreview ? `
+              <div style="text-align:center;margin-bottom:12px">
+                <img src="${state.cgImagePreview.dataUrl}" style="max-width:100%;max-height:400px;border-radius:4px;box-shadow:0 2px 8px rgba(30,43,61,0.1)">
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button class="btn btn-secondary" data-action="cg-clear-image">이미지 변경</button>
+                <button class="btn btn-primary" data-action="cg-run-review" ${state.cgReviewLoading ? 'disabled' : ''}>
+                  ${state.cgReviewLoading ? '<span class="loading-spin"></span>' : icon('i-sparkles')}
+                  ${state.cgReviewLoading ? '대조 검수 중...' : '대조 검수 실행'}
+                </button>
+              </div>
+            ` : `
+              <div class="upload-dropzone" id="cg-image-dropzone" style="margin:0">
+                <input type="file" id="cg-image-input" accept="image/jpeg,image/png,image/webp" style="display:none">
+                <div class="upload-dropzone-icon">${icon('i-upload', 40)}</div>
+                <div class="upload-dropzone-title">완성된 CG 이미지 드래그 또는 클릭</div>
+                <div class="upload-dropzone-sub">JPG · PNG · WEBP</div>
+              </div>
+              <div class="text-mute2" style="font-size:11px;text-align:center;margin-top:12px;line-height:1.6">
+                이미지 업로드 → Gemini Vision 이 텍스트 추출 →<br>의뢰서와 자동 대조
+              </div>
+            `}
           </div>
         </div>
       </div>
+
+      ${review && review.itemIndex === activeIdx ? renderCGReviewResult(review) : ''}
     </div>
   `;
+}
+
+function renderCGReviewResult(review) {
+  const issues = review.issues || [];
+  const critical = issues.filter(x => x.severity === 'critical');
+  const warn = issues.filter(x => x.severity === 'warn');
+  const info = issues.filter(x => x.severity === 'info');
+  const isPass = critical.length === 0 && warn.length === 0;
+
+  return `
+    <div style="margin-top:24px">
+      <div class="section-title">${icon('i-sparkles')}<span class="lbl">대조 검수 결과 · ${esc(new Date(review.checkedAt).toLocaleString('ko-KR'))}</span></div>
+
+      ${isPass ? `
+        <div class="card" style="border-left:4px solid #059669;background:rgba(5,150,105,0.04)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:40px;height:40px;border-radius:50%;background:rgba(5,150,105,0.15);display:flex;align-items:center;justify-content:center;color:#059669">${icon('i-check', 20)}</div>
+            <div>
+              <div class="serif" style="font-size:18px;font-weight:900;color:#059669">검수 통과</div>
+              <div class="text-muted" style="font-size:12px">의뢰서와 CG가 완전히 일치합니다</div>
+            </div>
+          </div>
+        </div>
+      ` : `
+        <div class="stat-row">
+          <div class="stat error"><div class="n">${critical.length}</div><div class="lbl">★ 심각</div></div>
+          <div class="stat warn"><div class="n">${warn.length}</div><div class="lbl">⚠ 경고</div></div>
+          <div class="stat suggest"><div class="n">${info.length}</div><div class="lbl">참고</div></div>
+        </div>
+
+        ${critical.map(x => renderReviewIssue(x)).join('')}
+        ${warn.map(x => renderReviewIssue(x)).join('')}
+        ${info.map(x => renderReviewIssue(x)).join('')}
+      `}
+
+      <details style="margin-top:16px">
+        <summary class="mono text-mute2" style="font-size:11px;letter-spacing:0.1em;cursor:pointer;padding:8px 0">
+          Gemini 가 추출한 원본 데이터 (JSON)
+        </summary>
+        <div style="background:#faf6ec;padding:12px;border-radius:4px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#4a5670;max-height:300px;overflow-y:auto;white-space:pre-wrap">${esc(JSON.stringify(review.ocrResult, null, 2))}</div>
+      </details>
+    </div>
+  `;
+}
+
+function renderReviewIssue(issue) {
+  const severityMap = {
+    critical: { cls: 'error', label: '★ 심각', symbol: '★' },
+    warn: { cls: 'warn', label: '⚠ 경고', symbol: '⚠' },
+    info: { cls: 'suggest', label: '참고', symbol: '·' }
+  };
+  const sv = severityMap[issue.severity] || severityMap.warn;
+  const typeLabelMap = {
+    'title-mismatch': '제목 완전 불일치',
+    'title-diff': '제목 차이',
+    'title-missing': '제목 없음',
+    'subtitle-diff': '부제 차이',
+    'number-diff': '숫자 값 불일치',
+    'number-missing': '숫자 누락',
+    'number-extra': '추가 숫자',
+    'text-diff': '텍스트 차이',
+    'text-missing': '텍스트 누락',
+    'color-mismatch': '색상 지시 불일치'
+  };
+  return `
+    <div class="finding ${sv.cls} fade-in">
+      <div class="finding-type">${sv.label} · ${esc(typeLabelMap[issue.type] || issue.type)}</div>
+      <div class="finding-text" style="margin-bottom:6px;line-height:1.6">
+        ${esc(issue.message)}
+      </div>
+      <div style="display:grid;grid-template-columns:60px 1fr;gap:6px;font-size:12px;line-height:1.6">
+        <span class="text-mute2">의뢰서:</span>
+        <span class="fix">${esc(issue.expected)}</span>
+        <span class="text-mute2">CG:</span>
+        <span class="strike">${esc(issue.actual)}</span>
+      </div>
+    </div>
+  `;
+}
+
+// -------- CG 이미지 업로드 & 대조 --------
+async function handleCGImageUpload(file) {
+  if (!file) return;
+  const mimeType = file.type || 'image/jpeg';
+  if (!/^image\/(jpeg|png|webp)$/.test(mimeType)) {
+    showNotify('JPG · PNG · WEBP 만 지원', true);
+    return;
+  }
+  // 이미지 크기 제한 (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showNotify('이미지 크기 5MB 이하로 업로드해주세요', true);
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    const base64 = dataUrl.split(',')[1];
+    state.cgImagePreview = { dataUrl, mimeType, base64, name: file.name };
+    renderApp();
+  };
+  reader.onerror = () => showNotify('이미지 읽기 실패', true);
+  reader.readAsDataURL(file);
+}
+
+async function handleCGRunReview() {
+  if (!state.cgImagePreview || !state.cgCurrent) return;
+  state.cgReviewLoading = true;
+  renderApp();
+
+  try {
+    const resp = await fetch('/api/check-cg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cgId: state.cgCurrent,
+        itemIndex: state.cgReviewItemIndex || 0,
+        imageBase64: state.cgImagePreview.base64,
+        imageMimeType: state.cgImagePreview.mimeType
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.success) {
+      throw new Error(data.error || `HTTP ${resp.status}`);
+    }
+    // 새 리뷰 결과 반영
+    state.cgCurrentData = {
+      ...state.cgCurrentData,
+      status: data.status,
+      reviewResult: data.reviewResult
+    };
+    const issueCount = data.reviewResult?.issueCount || 0;
+    if (issueCount === 0) {
+      showNotify('검수 통과 · 오류 없음');
+    } else {
+      showNotify(`대조 완료 · 오류 ${issueCount}건`);
+    }
+    // 목록도 새로고침
+    state.cgList = await fetchCGList();
+  } catch (e) {
+    console.error(e);
+    showNotify('대조 검수 실패: ' + e.message, true);
+  } finally {
+    state.cgReviewLoading = false;
+    renderApp();
+  }
 }
 
 // -------- 로드 & 액션 --------
@@ -3520,6 +3700,27 @@ function attachHandlers() {
     cgDropzone.addEventListener('drop', (e) => {
       const f = e.dataTransfer.files[0];
       if (f) handleCGFileUpload(f);
+    });
+  }
+
+  // CG 이미지 - dropzone (상세 뷰)
+  const cgImgDropzone = document.getElementById('cg-image-dropzone');
+  const cgImgInput = document.getElementById('cg-image-input');
+  if (cgImgDropzone && cgImgInput) {
+    cgImgDropzone.addEventListener('click', () => cgImgInput.click());
+    cgImgInput.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (f) handleCGImageUpload(f);
+    });
+    ['dragover', 'dragenter'].forEach(evt => {
+      cgImgDropzone.addEventListener(evt, (e) => { e.preventDefault(); cgImgDropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      cgImgDropzone.addEventListener(evt, (e) => { e.preventDefault(); cgImgDropzone.classList.remove('dragover'); });
+    });
+    cgImgDropzone.addEventListener('drop', (e) => {
+      const f = e.dataTransfer.files[0];
+      if (f) handleCGImageUpload(f);
     });
   }
 
@@ -3702,12 +3903,28 @@ function attachHandlers() {
           state.cgCurrentData = null;
           state.cgSubView = 'detail';
           state.cgConfirmDelete = false;
+          state.cgImagePreview = null;   // 새 의뢰서 열 때 이미지 초기화
+          state.cgReviewItemIndex = 0;
           renderApp();
           fetchCGRequest(btn.dataset.id).then(data => {
             state.cgCurrentData = data;
             renderApp();
           });
           break;
+        case 'cg-clear-image':
+          state.cgImagePreview = null;
+          renderApp();
+          break;
+        case 'cg-run-review':
+          await handleCGRunReview();
+          break;
+        case 'cg-switch-item': {
+          const idx = parseInt(btn.dataset.idx || '0');
+          state.cgReviewItemIndex = idx;
+          state.cgImagePreview = null;   // 다른 항목으로 전환 시 이미지 클리어
+          renderApp();
+          break;
+        }
         case 'cg-request-delete':
           state.cgConfirmDelete = true;
           renderApp();
