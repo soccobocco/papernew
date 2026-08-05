@@ -925,6 +925,100 @@ body {
   height: 8px;
   border-radius: 2px;
 }
+
+/* ============= CG REVIEW ============= */
+.cg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 12px;
+}
+.cg-card {
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(30,43,61,0.08);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  font-size: inherit;
+  box-shadow: 0 1px 3px rgba(30,43,61,0.04);
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+}
+.cg-card:hover {
+  border-color: #1e3a5f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(30,43,61,0.08);
+}
+.cg-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.cg-card-date {
+  font-size: 11px;
+  color: #7d8590;
+  margin-bottom: 2px;
+}
+.cg-card-program {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a2b3d;
+}
+.cg-card-titles {
+  flex: 1;
+  margin-bottom: 12px;
+}
+.cg-card-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a2b3d;
+  line-height: 1.4;
+  padding: 3px 0;
+}
+.cg-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #7d8590;
+  font-family: 'IBM Plex Mono', monospace;
+  padding-top: 10px;
+  border-top: 1px solid rgba(30,43,61,0.06);
+}
+.cg-filter-btn {
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid rgba(30,43,61,0.15);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4a5670;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cg-filter-btn:hover { background: rgba(30,43,61,0.04); }
+.cg-filter-btn.active {
+  background: #1e3a5f;
+  color: #ffffff;
+  border-color: #1e3a5f;
+}
+.cg-filter-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 1px 5px;
+  background: rgba(30,43,61,0.1);
+  border-radius: 2px;
+}
+.cg-filter-btn.active .cg-filter-count { background: rgba(255,255,255,0.2); color: #ffffff; }
 </style>
 </head>
 <body>
@@ -1042,7 +1136,16 @@ const state = {
   scheduleData: {},              // { program: { day: { corner, guests[] } } }
   scheduleDrawer: null,          // { program, day } — 열려있는 셀
   scheduleImportOpen: false,
-  scheduleLoading: false
+  scheduleLoading: false,
+  // CG 검수 관련
+  cgList: [],                    // 의뢰서 목록 (요약)
+  cgCurrent: null,               // 현재 상세 보고 있는 의뢰서 id
+  cgCurrentData: null,           // 현재 상세 데이터 (full)
+  cgSubView: 'list',             // 'list' | 'upload' | 'detail'
+  cgParsed: null,                // 등록 중 파싱 결과
+  cgUploadRaw: '',               // 등록 중 원본 텍스트
+  cgConfirmDelete: false,
+  cgFilter: 'all'                // 'all' | 'draft' | 'reviewed' | 'cg-uploaded' | 'matched' | 'issue'
 };
 
 // ==============================================================
@@ -1459,6 +1562,10 @@ function renderSidebar() {
         <button class="nav-item ${state.view === 'schedule' ? 'active' : ''}" data-nav="schedule">
           ${icon('i-calendar', 15)}<span class="label">주간 편성</span>
         </button>
+        <button class="nav-item ${state.view === 'cg-review' ? 'active' : ''}" data-nav="cg-review">
+          ${icon('i-layers', 15)}<span class="label">CG 검수</span>
+          ${state.cgList.filter(x => x.status === 'issue').length > 0 ? `<span class="badge">${state.cgList.filter(x => x.status === 'issue').length}</span>` : ''}
+        </button>
         <button class="nav-item ${state.view === 'search' ? 'active' : ''}" data-nav="search">
           ${icon('i-search', 15)}<span class="label">통합 검색</span>
         </button>
@@ -1493,6 +1600,7 @@ function renderMain() {
     case 'detail': return renderDetail();
     case 'search': return renderSearch();
     case 'schedule': return renderSchedule();
+    case 'cg-review': return renderCGReview();
     default: return '';
   }
 }
@@ -2029,12 +2137,28 @@ function renderSearch() {
         <div style="position:absolute;left:14px;top:14px;color:#64748b">${icon('i-search', 16)}</div>
         <input autofocus type="text" class="paste-area" id="search-input" value="${esc(state.searchQuery)}" placeholder="게스트명 · 종목명 · 이벤트 · 섹터 · 코너명 등" style="padding:12px 12px 12px 40px;font-size:14px;height:auto;font-family:'Noto Sans KR',sans-serif">
       </div>
-      ${q ? `<div class="text-mute2" style="font-size:12px;margin-bottom:16px">${results.length}건 검색됨</div>` : ''}
-      <div class="archive-grid">
+      <div id="search-count" class="text-mute2" style="font-size:12px;margin-bottom:16px">${q ? results.length + '건 검색됨' : ''}</div>
+      <div id="search-results" class="archive-grid">
         ${results.map(m => renderArchiveCard(m)).join('')}
       </div>
     </div>
   `;
+}
+
+// 검색 결과만 부분 업데이트 (renderApp() 안 호출 - IME 조합 유지)
+function updateSearchResults() {
+  const q = state.searchQuery.trim().toLowerCase();
+  const results = !q ? [] : state.archive.filter(m => {
+    const searchable = [
+      m.program, m.corner, m.guest, m.airDate,
+      ...(m.tickers || []), ...(m.events || []), ...(m.sectors || []), ...(m.organizations || [])
+    ].filter(Boolean).join(' ').toLowerCase();
+    return searchable.includes(q);
+  });
+  const countEl = document.getElementById('search-count');
+  const listEl = document.getElementById('search-results');
+  if (countEl) countEl.textContent = q ? `${results.length}건 검색됨` : '';
+  if (listEl) listEl.innerHTML = results.map(m => renderArchiveCard(m)).join('');
 }
 
 // ---------- MODAL ----------
@@ -2822,6 +2946,526 @@ async function handleParseScheduleImport() {
 }
 
 // ==============================================================
+// CG 검수 — API, 파서, 렌더러, 핸들러
+// ==============================================================
+
+// -------- API --------
+async function fetchCGList() {
+  try {
+    const resp = await fetch('/api/cg-requests');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    return data.items || [];
+  } catch (e) {
+    console.error('CG 목록 로드 실패', e);
+    return [];
+  }
+}
+
+async function fetchCGRequest(id) {
+  try {
+    const resp = await fetch(`/api/cg-requests/${encodeURIComponent(id)}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    return data.request;
+  } catch (e) {
+    console.error('CG 의뢰서 로드 실패', e);
+    return null;
+  }
+}
+
+async function saveCGRequest(entry, id) {
+  const url = id ? `/api/cg-requests/${encodeURIComponent(id)}` : '/api/cg-requests';
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry)
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+    throw new Error(err.error || '저장 실패');
+  }
+  return await resp.json();
+}
+
+async function deleteCGRequest(id) {
+  const resp = await fetch(`/api/cg-requests/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
+
+// -------- CG 의뢰서 파서 --------
+// 실제 데이터 기반: 성투/파이널콜/위클리뷰/하우스뷰/전략 인사이드 포맷 등
+function parseCGRequest(rawText) {
+  const text = String(rawText || '').replace(/\r\n/g, '\n');
+  // HWP 필드 코드 잔여물 제거 및 표 마커 삽입
+  const cleaned = text
+    .replace(/捤獥汤捯/g, '')
+    .replace(/氠瑢/g, '\n[TABLE_START]\n')
+    .replace(/漠杳/g, '\n[TABLE_END]\n');
+
+  const lines = cleaned.split('\n').map(l => l.trim());
+
+  const result = {
+    airDate: null,
+    program: null,
+    corner: null,
+    cgTypeFormat: null,   // "전략 인사이드 포맷", "하우스뷰", "파이널콜" 등
+    items: [],
+    raw: rawText
+  };
+
+  const headerRe = /^(\d{4})\s*[\/·]\s*(.+?)(?:\s*[\/·]\s*(.+))?$/;
+  const cgNumberRe = /^(통CG|CG|서브|수퍼|하단|월백)\s*(\d+)\s*(?:\(([^)]+)\))?\s*>?\s*$/i;
+  const subtitleRe = /^※\s*(.+)$/;
+  const instructionRe = /^>>\s*(.+)$/;
+
+  let inItem = null;
+  let inTable = false;
+  let dataBuffer = [];
+
+  function flushCurrentItem() {
+    if (inItem) {
+      inItem.dataRows = dataBuffer.filter(Boolean);
+      result.items.push(inItem);
+    }
+    inItem = null;
+    dataBuffer = [];
+    inTable = false;
+  }
+
+  function parseHeaderMid(mid) {
+    // "성공투자 오후증시 통cg 의뢰(하우스뷰)" → program, format
+    let format = null;
+    let programPart = mid;
+    const parenMatch = mid.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+    if (parenMatch) {
+      programPart = parenMatch[1].trim();
+      format = parenMatch[2].trim();
+    }
+    programPart = programPart.replace(/\s*(?:통cg|cg|서브|수퍼|하단|월백)\s*의뢰\s*$/i, '').trim();
+    return { program: programPart, format };
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line) continue;
+
+    // 헤더 라인 (CG 시작 전)
+    if (!inItem && !result.airDate) {
+      const hm = line.match(headerRe);
+      if (hm && /의뢰|의뢰서/.test(line)) {
+        const d = hm[1];
+        result.airDate = d.length === 4 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+        const { program, format } = parseHeaderMid(hm[2]);
+        result.program = program;
+        result.cgTypeFormat = hm[3] ? hm[3].trim() : format;
+        continue;
+      }
+    }
+
+    // CG 번호 시작
+    const cnm = line.match(cgNumberRe);
+    if (cnm) {
+      flushCurrentItem();
+      inItem = {
+        number: cnm[1] + cnm[2],
+        graphType: cnm[3] || '',
+        title: '',
+        subtitle: '',
+        dataRows: [],
+        specialInstructions: []
+      };
+      continue;
+    }
+
+    if (!inItem) continue;
+
+    if (line === '[TABLE_START]') { inTable = true; continue; }
+    if (line === '[TABLE_END]') { inTable = false; continue; }
+
+    if (inItem && !inItem.title && !inTable) {
+      inItem.title = line;
+      continue;
+    }
+
+    const sm = line.match(subtitleRe);
+    if (sm) {
+      inItem.subtitle = sm[1].trim();
+      continue;
+    }
+
+    const im = line.match(instructionRe);
+    if (im) {
+      inItem.specialInstructions.push(im[1].trim());
+      continue;
+    }
+
+    dataBuffer.push(line);
+  }
+  flushCurrentItem();
+
+  return result;
+}
+
+// -------- 파일 업로드 처리 --------
+async function handleCGFileUpload(file) {
+  const name = file.name.toLowerCase();
+  const pasteEl = document.getElementById('cg-paste-input');
+  if (!pasteEl) return;
+
+  try {
+    let text = '';
+    if (name.endsWith('.docx')) {
+      showNotify('DOCX 파싱 중...');
+      const arrayBuffer = await file.arrayBuffer();
+      if (typeof mammoth === 'undefined') {
+        showNotify('DOCX 라이브러리 로드 실패', true);
+        return;
+      }
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      text = result.value;
+      showNotify(`${file.name} 로드 완료`);
+    } else if (name.endsWith('.txt') || name.endsWith('.md')) {
+      text = await file.text();
+    } else if (name.endsWith('.hwp') || name.endsWith('.hwpx')) {
+      showNotify('HWP는 파일 열어서 텍스트 복사 후 붙여넣기 해주세요', true);
+      return;
+    } else {
+      showNotify('DOCX·TXT 지원 (HWP는 붙여넣기)', true);
+      return;
+    }
+    if (!text || text.trim().length < 20) {
+      showNotify('파일에서 텍스트를 추출하지 못했습니다', true);
+      return;
+    }
+    pasteEl.value = text;
+    document.getElementById('cg-paste-count').textContent = text.length.toLocaleString() + ' 자';
+    document.getElementById('cg-submit-btn').disabled = text.length < 20;
+  } catch (e) {
+    console.error(e);
+    showNotify('파일 파싱 실패: ' + e.message, true);
+  }
+}
+
+// -------- 뷰: CG 검수 메인 --------
+function renderCGReview() {
+  if (state.cgSubView === 'upload') return renderCGUpload();
+  if (state.cgSubView === 'detail') return renderCGDetail();
+  return renderCGList();
+}
+
+function renderCGList() {
+  const filtered = state.cgFilter === 'all'
+    ? state.cgList
+    : state.cgList.filter(x => x.status === state.cgFilter);
+
+  return `
+    <div class="scroll-y" style="padding:32px 40px;flex:1">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+        <div style="flex:1">
+          <div class="mono text-cyan" style="font-size:11px;letter-spacing:0.2em">CG REVIEW</div>
+          <h1 class="serif" style="font-size:28px;font-weight:900;color:#1a2b3d;margin-top:4px">CG 검수</h1>
+          <div class="text-muted" style="font-size:13px;margin-top:4px">의뢰서와 완성된 CG를 대조하여 오류를 자동 감지</div>
+        </div>
+        <button class="btn btn-primary btn-lg" data-action="cg-new-request">
+          ${icon('i-plus', 14)} 새 의뢰서 등록
+        </button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        ${renderCGFilterButton('all', '전체', state.cgList.length)}
+        ${renderCGFilterButton('draft', '초안', state.cgList.filter(x => x.status === 'draft').length)}
+        ${renderCGFilterButton('cg-uploaded', 'CG 검수 대기', state.cgList.filter(x => x.status === 'cg-uploaded').length)}
+        ${renderCGFilterButton('matched', '통과', state.cgList.filter(x => x.status === 'matched').length)}
+        ${renderCGFilterButton('issue', '오류 발견', state.cgList.filter(x => x.status === 'issue').length)}
+      </div>
+
+      ${filtered.length === 0 ? `
+        <div class="empty-state">
+          <div class="icon">${icon('i-file', 48)}</div>
+          <div class="title">${state.cgFilter === 'all' ? '아직 등록된 CG 의뢰서가 없습니다' : '해당 상태의 의뢰서가 없습니다'}</div>
+          <div class="desc">CG 팀에 보내는 의뢰서 텍스트나 HWP·DOCX 파일을 등록하여 시작하세요</div>
+        </div>
+      ` : `
+        <div class="cg-grid">
+          ${filtered.map(x => renderCGCard(x)).join('')}
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function renderCGFilterButton(key, label, count) {
+  const active = state.cgFilter === key;
+  return `
+    <button class="cg-filter-btn ${active ? 'active' : ''}" data-action="cg-filter" data-key="${key}">
+      ${esc(label)} ${count > 0 ? `<span class="cg-filter-count">${count}</span>` : ''}
+    </button>
+  `;
+}
+
+function renderCGCard(item) {
+  const statusInfo = {
+    'draft': { label: '초안', cls: 'slate' },
+    'reviewed': { label: '텍스트 검수 완료', cls: 'blue' },
+    'cg-uploaded': { label: 'CG 검수 대기', cls: 'amber' },
+    'matched': { label: '통과', cls: 'emerald' },
+    'issue': { label: `오류 ${item.reviewIssueCount || 0}건`, cls: 'coral' }
+  };
+  const st = statusInfo[item.status] || statusInfo.draft;
+  return `
+    <button class="cg-card fade-in" data-action="cg-open" data-id="${esc(item.id)}">
+      <div class="cg-card-top">
+        <div>
+          <div class="cg-card-date mono">${esc(item.airDate || '—')}</div>
+          <div class="cg-card-program">${esc(item.program || '(프로그램 미지정)')}${item.cgTypeFormat ? ' · ' + esc(item.cgTypeFormat) : ''}</div>
+        </div>
+        <span class="chip ${st.cls}">${esc(st.label)}</span>
+      </div>
+      <div class="cg-card-titles">
+        ${(item.titles || []).slice(0, 3).map(t => `<div class="cg-card-title">${esc(t || '(제목 없음)')}</div>`).join('')}
+        ${item.titles && item.titles.length > 3 ? `<div class="text-mute2" style="font-size:11px">...외 ${item.titles.length - 3}건</div>` : ''}
+      </div>
+      <div class="cg-card-bottom">
+        <span>${item.itemCount || 0}개 CG</span>
+        ${item.hasDelivery ? `<span class="text-emerald">${icon('i-check', 11)} CG 업로드됨</span>` : `<span class="text-mute2">CG 대기</span>`}
+      </div>
+    </button>
+  `;
+}
+
+// -------- 뷰: CG 등록 --------
+function renderCGUpload() {
+  const p = state.cgParsed;
+  return `
+    <div class="scroll-y" style="padding:32px 40px;flex:1;max-width:1000px;margin:0 auto">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button class="btn btn-secondary" data-action="cg-back-list" style="padding:6px 10px">${icon('i-left')} 목록으로</button>
+        <div style="flex:1">
+          <div class="mono text-cyan" style="font-size:11px;letter-spacing:0.2em">CG 의뢰서 등록</div>
+          <h1 class="serif" style="font-size:22px;font-weight:900;color:#1a2b3d;margin-top:2px">의뢰서를 붙여넣거나 파일 업로드</h1>
+        </div>
+      </div>
+
+      <div class="upload-dropzone" id="cg-dropzone">
+        <input type="file" id="cg-file-input" accept=".docx,.txt,.md" style="display:none">
+        <div class="upload-dropzone-icon">${icon('i-upload', 40)}</div>
+        <div class="upload-dropzone-title">파일 드래그 또는 클릭해서 선택</div>
+        <div class="upload-dropzone-sub">DOCX · TXT (HWP는 붙여넣기 사용)</div>
+      </div>
+
+      <div class="upload-divider">또는 직접 붙여넣기</div>
+
+      <div style="position:relative">
+        <textarea class="paste-area scroll-y" id="cg-paste-input" style="height:240px" placeholder="의뢰서 텍스트를 여기 붙여넣기 (예: '0728 / 성공투자 오후증시 통cg 의뢰 / 전략 인사이드 포맷' 시작)"></textarea>
+        <div class="mono" style="position:absolute;bottom:12px;right:16px;font-size:11px;color:#64748b" id="cg-paste-count">0 자</div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end">
+        <button class="btn btn-primary btn-lg" data-action="cg-parse-submit" id="cg-submit-btn" disabled>
+          ${icon('i-zap', 16)} 파싱 & 미리보기
+        </button>
+      </div>
+
+      ${p ? renderCGParsedPreview(p) : ''}
+    </div>
+  `;
+}
+
+function renderCGParsedPreview(p) {
+  return `
+    <div style="margin-top:32px;border-top:1px solid rgba(30,43,61,0.1);padding-top:24px">
+      <div class="section-title">${icon('i-file')}<span class="lbl">파싱 결과 · 확인 후 저장</span></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="field-row">
+          <div class="field-label">방송일</div>
+          <input type="text" class="field-input" id="cg-edit-airdate" value="${esc(p.airDate || '')}" placeholder="예: 08/04">
+        </div>
+        <div class="field-row">
+          <div class="field-label">프로그램</div>
+          <input type="text" class="field-input" id="cg-edit-program" value="${esc(p.program || '')}" placeholder="예: 성공투자 오후증시">
+        </div>
+        <div class="field-row">
+          <div class="field-label">포맷/코너</div>
+          <input type="text" class="field-input" id="cg-edit-format" value="${esc(p.cgTypeFormat || '')}" placeholder="예: 하우스뷰, 파이널콜, 위클리뷰 포맷">
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <div class="section-title">${icon('i-layers')}<span class="lbl">CG 항목 (${p.items.length})</span></div>
+        ${p.items.length === 0 ? `<div class="card text-mute2" style="font-size:12px;text-align:center;padding:24px;font-style:italic">
+          파싱된 CG 항목이 없습니다. 텍스트에 "통CG1 >" 같은 마커가 있는지 확인해주세요.
+        </div>` : p.items.map((it, i) => `
+          <div class="card" style="margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span class="chip cyan">${esc(it.number)}</span>
+              ${it.graphType ? `<span class="chip slate">${esc(it.graphType)}</span>` : ''}
+              <span class="serif" style="font-size:16px;font-weight:700;color:#1a2b3d;flex:1">${esc(it.title || '(제목 없음)')}</span>
+            </div>
+            ${it.subtitle ? `<div class="text-muted" style="font-size:12px;margin-bottom:6px">부제: ${esc(it.subtitle)}</div>` : ''}
+            <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em;margin-top:8px;margin-bottom:4px">DATA · ${it.dataRows.length}건</div>
+            <div style="background:#faf6ec;padding:8px 10px;border-radius:3px;font-size:11px;line-height:1.7;color:#4a5670;max-height:120px;overflow-y:auto">
+              ${it.dataRows.slice(0, 12).map(d => esc(d)).join('<br>')}
+              ${it.dataRows.length > 12 ? `<div class="text-mute2" style="margin-top:4px">...외 ${it.dataRows.length - 12}줄</div>` : ''}
+            </div>
+            ${it.specialInstructions.length > 0 ? `
+              <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em;margin-top:10px;margin-bottom:4px">SPECIAL INSTRUCTIONS</div>
+              ${it.specialInstructions.map(inst => `<div style="font-size:12px;color:#b45309;padding:2px 0">▸ ${esc(inst)}</div>`).join('')}
+            ` : ''}
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-secondary" data-action="cg-cancel-preview">취소</button>
+        <button class="btn btn-primary" data-action="cg-save-parsed">${icon('i-save')} 저장</button>
+      </div>
+    </div>
+  `;
+}
+
+// -------- 뷰: CG 상세 --------
+function renderCGDetail() {
+  const d = state.cgCurrentData;
+  if (!d) {
+    return `
+      <div class="scroll-y" style="padding:32px 40px;flex:1">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+          <button class="btn btn-secondary" data-action="cg-back-list" style="padding:6px 10px">${icon('i-left')} 목록으로</button>
+        </div>
+        <div style="padding:80px;text-align:center">
+          <span class="loading-spin" style="width:24px;height:24px"></span>
+          <div class="text-muted" style="font-size:12px;margin-top:12px">의뢰서 로드 중...</div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="scroll-y" style="padding:24px 32px;flex:1">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+        <button class="btn btn-secondary" data-action="cg-back-list" style="padding:6px 10px">${icon('i-left')} 목록으로</button>
+        <div style="flex:1"></div>
+        ${state.cgConfirmDelete ? `
+          <span class="text-amber" style="font-size:12px">정말 삭제하시겠습니까?</span>
+          <button class="btn btn-secondary" data-action="cg-cancel-delete" style="padding:4px 10px">취소</button>
+          <button class="btn btn-danger" data-action="cg-confirm-delete">확인 삭제</button>
+        ` : `
+          <button class="btn btn-danger" data-action="cg-request-delete">${icon('i-trash', 13)} 삭제</button>
+        `}
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span class="chip cyan">${esc(d.airDate || '—')}</span>
+          <span class="chip slate">${esc(d.program || '—')}</span>
+          ${d.cgTypeFormat ? `<span class="chip amber">${esc(d.cgTypeFormat)}</span>` : ''}
+          <div style="flex:1"></div>
+          <span class="text-mute2" style="font-size:11px">ID: ${esc(d.id)}</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>
+          <div class="section-title">${icon('i-file')}<span class="lbl">의뢰서 원본</span></div>
+          <div class="card" style="max-height:600px;overflow-y:auto">
+            ${(d.items || []).map((it, i) => `
+              <div style="padding:${i > 0 ? '16px' : '0'} 0 16px;${i > 0 ? 'border-top:1px solid rgba(30,43,61,0.08);margin-top:16px' : ''}">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                  <span class="chip cyan">${esc(it.number)}</span>
+                  ${it.graphType ? `<span class="chip slate">${esc(it.graphType)}</span>` : ''}
+                </div>
+                <div class="serif" style="font-size:18px;font-weight:800;color:#1a2b3d;margin-bottom:6px">${esc(it.title || '')}</div>
+                ${it.subtitle ? `<div class="text-muted" style="font-size:12px;margin-bottom:10px">${esc(it.subtitle)}</div>` : ''}
+                ${it.dataRows.length > 0 ? `
+                  <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em;margin-top:8px;margin-bottom:4px">DATA</div>
+                  <div style="background:#faf6ec;padding:10px 12px;border-radius:3px;font-size:12px;line-height:1.7;color:#1a2b3d">
+                    ${it.dataRows.map(x => esc(x)).join('<br>')}
+                  </div>
+                ` : ''}
+                ${it.specialInstructions.length > 0 ? `
+                  <div class="mono text-mute2" style="font-size:10px;letter-spacing:0.1em;margin-top:10px;margin-bottom:4px">SPECIAL INSTRUCTIONS</div>
+                  ${it.specialInstructions.map(inst => `<div style="font-size:12px;color:#b45309;padding:3px 0">▸ ${esc(inst)}</div>`).join('')}
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div>
+          <div class="section-title">${icon('i-file')}<span class="lbl">완성된 CG</span></div>
+          <div class="card" style="min-height:400px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px">
+            <div style="text-align:center">
+              ${icon('i-upload', 32)}
+              <div class="serif" style="font-size:14px;color:#4a5670;margin:10px 0">Phase 2 에서 지원 예정</div>
+              <div class="text-mute2" style="font-size:11px;line-height:1.6">CG 이미지 업로드 →<br>Gemini Vision OCR →<br>의뢰서 텍스트와 대조</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// -------- 로드 & 액션 --------
+async function loadCGList() {
+  state.cgList = await fetchCGList();
+  renderApp();
+}
+
+async function handleCGParse() {
+  const text = document.getElementById('cg-paste-input')?.value || '';
+  if (!text || text.trim().length < 20) return;
+  const parsed = parseCGRequest(text);
+  state.cgParsed = parsed;
+  state.cgUploadRaw = text;
+  renderApp();
+}
+
+async function handleCGSaveParsed() {
+  if (!state.cgParsed) return;
+  const airDate = document.getElementById('cg-edit-airdate')?.value?.trim() || null;
+  const program = document.getElementById('cg-edit-program')?.value?.trim() || null;
+  const cgTypeFormat = document.getElementById('cg-edit-format')?.value?.trim() || null;
+  const entry = {
+    ...state.cgParsed,
+    airDate, program, cgTypeFormat,
+    raw: state.cgUploadRaw,
+    status: 'draft'
+  };
+  try {
+    const result = await saveCGRequest(entry);
+    showNotify('CG 의뢰서 저장 완료');
+    state.cgParsed = null;
+    state.cgUploadRaw = '';
+    state.cgSubView = 'list';
+    state.cgList = await fetchCGList();
+    renderApp();
+  } catch (e) {
+    showNotify('저장 실패: ' + e.message, true);
+  }
+}
+
+async function handleCGDelete() {
+  if (!state.cgCurrent) return;
+  try {
+    await deleteCGRequest(state.cgCurrent);
+    showNotify('삭제 완료');
+    state.cgCurrent = null;
+    state.cgCurrentData = null;
+    state.cgConfirmDelete = false;
+    state.cgSubView = 'list';
+    state.cgList = await fetchCGList();
+    renderApp();
+  } catch (e) {
+    showNotify('삭제 실패: ' + e.message, true);
+  }
+}
+
+// ==============================================================
 // EVENT HANDLERS
 // ==============================================================
 function attachHandlers() {
@@ -2839,8 +3483,45 @@ function attachHandlers() {
         const week = state.scheduleWeek || toISODate(getMondayOfWeek(new Date()));
         loadScheduleWeek(week);
       }
+      // CG 검수 뷰 진입 시 목록 로드
+      if (v === 'cg-review') {
+        state.cgSubView = 'list';
+        loadCGList();
+      }
     });
   });
+
+  // CG 페이지 - paste tracking
+  const cgPasteEl = document.getElementById('cg-paste-input');
+  if (cgPasteEl) {
+    cgPasteEl.addEventListener('input', (e) => {
+      const c = e.target.value.length;
+      const cnt = document.getElementById('cg-paste-count');
+      const btn = document.getElementById('cg-submit-btn');
+      if (cnt) cnt.textContent = c.toLocaleString() + ' 자';
+      if (btn) btn.disabled = c < 20;
+    });
+  }
+  // CG 페이지 - dropzone
+  const cgDropzone = document.getElementById('cg-dropzone');
+  const cgFileInput = document.getElementById('cg-file-input');
+  if (cgDropzone && cgFileInput) {
+    cgDropzone.addEventListener('click', () => cgFileInput.click());
+    cgFileInput.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (f) handleCGFileUpload(f);
+    });
+    ['dragover', 'dragenter'].forEach(evt => {
+      cgDropzone.addEventListener(evt, (e) => { e.preventDefault(); cgDropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      cgDropzone.addEventListener(evt, (e) => { e.preventDefault(); cgDropzone.classList.remove('dragover'); });
+    });
+    cgDropzone.addEventListener('drop', (e) => {
+      const f = e.dataTransfer.files[0];
+      if (f) handleCGFileUpload(f);
+    });
+  }
 
   // Upload paste tracking
   const pasteEl = document.getElementById('paste-input');
@@ -2984,6 +3665,60 @@ function attachHandlers() {
           renderApp();
           break;
         }
+
+        // ---- CG 검수 관련 ----
+        case 'cg-new-request':
+          state.cgSubView = 'upload';
+          state.cgParsed = null;
+          state.cgUploadRaw = '';
+          renderApp();
+          break;
+        case 'cg-back-list':
+          state.cgSubView = 'list';
+          state.cgCurrent = null;
+          state.cgCurrentData = null;
+          state.cgParsed = null;
+          state.cgUploadRaw = '';
+          state.cgConfirmDelete = false;
+          renderApp();
+          break;
+        case 'cg-filter':
+          state.cgFilter = btn.dataset.key || 'all';
+          renderApp();
+          break;
+        case 'cg-parse-submit':
+          await handleCGParse();
+          break;
+        case 'cg-cancel-preview':
+          state.cgParsed = null;
+          state.cgUploadRaw = '';
+          renderApp();
+          break;
+        case 'cg-save-parsed':
+          await handleCGSaveParsed();
+          break;
+        case 'cg-open':
+          state.cgCurrent = btn.dataset.id;
+          state.cgCurrentData = null;
+          state.cgSubView = 'detail';
+          state.cgConfirmDelete = false;
+          renderApp();
+          fetchCGRequest(btn.dataset.id).then(data => {
+            state.cgCurrentData = data;
+            renderApp();
+          });
+          break;
+        case 'cg-request-delete':
+          state.cgConfirmDelete = true;
+          renderApp();
+          break;
+        case 'cg-cancel-delete':
+          state.cgConfirmDelete = false;
+          renderApp();
+          break;
+        case 'cg-confirm-delete':
+          await handleCGDelete();
+          break;
       }
     });
   });
@@ -3003,16 +3738,22 @@ function attachHandlers() {
     renderApp();
   });
 
-  // Search
+  // Search - 한글 IME 조합 유지 (renderApp 안 하고 결과만 부분 업데이트)
   const searchEl = document.getElementById('search-input');
-  if (searchEl) searchEl.addEventListener('input', (e) => {
-    state.searchQuery = e.target.value;
-    // don't rerender everything, just update results panel
-    renderApp();
-    // restore focus
-    const restored = document.getElementById('search-input');
-    if (restored) { restored.focus(); restored.setSelectionRange(e.target.value.length, e.target.value.length); }
-  });
+  if (searchEl) {
+    let isComposing = false;
+    searchEl.addEventListener('compositionstart', () => { isComposing = true; });
+    searchEl.addEventListener('compositionend', (e) => {
+      isComposing = false;
+      state.searchQuery = e.target.value;
+      updateSearchResults();
+    });
+    searchEl.addEventListener('input', (e) => {
+      state.searchQuery = e.target.value;
+      // 한글 조합 중에는 결과 업데이트 안 함 (조합 완료 시 compositionend 에서 처리)
+      if (!isComposing) updateSearchResults();
+    });
+  }
 }
 
 function resetUploadState() {
