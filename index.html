@@ -3495,16 +3495,22 @@ function renderReviewIssue(issue) {
   };
   const sv = severityMap[issue.severity] || severityMap.warn;
   const typeLabelMap = {
-    'title-mismatch': '제목 완전 불일치',
+    'title-mismatch': '제목 불일치',
     'title-diff': '제목 차이',
     'title-missing': '제목 없음',
+    'subtitle-mismatch': '부제·기준일 불일치',
     'subtitle-diff': '부제 차이',
+    'number-mismatch': '숫자 값 불일치',
     'number-diff': '숫자 값 불일치',
     'number-missing': '숫자 누락',
     'number-extra': '추가 숫자',
+    'annotation-broken': '주석 깨짐',
     'text-diff': '텍스트 차이',
+    'text-mismatch': '텍스트 차이',
     'text-missing': '텍스트 누락',
-    'color-mismatch': '색상 지시 불일치'
+    'text-extra': '추가 텍스트',
+    'color-mismatch': '색상 지시 불일치',
+    'layout-issue': '레이아웃 이슈'
   };
   return `
     <div class="finding ${sv.cls} fade-in">
